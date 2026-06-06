@@ -1,0 +1,11 @@
+node_modules/
+.next/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+ml/data/
+ml/runs/
+*.onnx
+!apps/web/public/models/manifest.json

@@ -1,0 +1,21 @@
+{
+  "name": "odoggle",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w @odoggle/web\" \"npm run dev -w @odoggle/server\"",
+    "build": "npm run build -w @odoggle/shared && npm run build -w @odoggle/web && npm run build -w @odoggle/server",
+    "lint": "npm run lint -w @odoggle/web",
+    "db:up": "docker compose -f infra/docker-compose.yml up postgres redis -d",
+    "db:down": "docker compose -f infra/docker-compose.yml down",
+    "ml:download": "python ml/scripts/download_dogflw.py",
+    "ml:train": "python ml/scripts/run_pipeline.py"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "version": "0.1.0-dev",
+  "localizer": "dog_face_localizer.onnx",
+  "landmarks": "dog_landmarks_46.onnx",
+  "localizerInputSize": 224,
+  "landmarkInputSize": 384,
+  "note": "Place trained ONNX files here. Heuristic fallback runs until models are present."
+}

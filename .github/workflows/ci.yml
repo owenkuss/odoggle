@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build shared
+        run: npm run build -w @odoggle/shared
+
+      - name: Build web
+        run: npm run build -w @odoggle/web
+
+      - name: Build server
+        run: npm run build -w @odoggle/server
+
+      - name: Lint web
+        run: npm run lint -w @odoggle/web
+
+  ml-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Syntax check ML scripts
+        run: |
+          python -m py_compile ml/train/train.py
+          python -m py_compile ml/train/landmarks.py
+          python -m py_compile ml/export/to_onnx.py
+          python -m py_compile ml/scripts/download_dogflw.py
