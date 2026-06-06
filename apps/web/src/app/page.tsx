@@ -17,9 +17,13 @@ export default async function HomePage() {
   return (
     <div className="max-w-5xl mx-auto">
       <section className="text-center py-16">
-        <p className="text-amber-400 text-sm mb-2">Live · {stats.activePlayers} dogs online</p>
-        <h1 className="text-5xl font-bold mb-4">Odoggle</h1>
-        <p className="text-xl text-zinc-400 mb-2">The 1v1 Dog Battle Game.</p>
+        <p className="text-amber-400 text-sm mb-2 uppercase tracking-widest">
+          Live · {stats.activePlayers} dogs online
+        </p>
+        <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
+          Odoggle
+        </h1>
+        <p className="text-xl text-zinc-300 mb-2">The 1v1 Dog Battle Game.</p>
         <p className="text-zinc-500 max-w-2xl mx-auto mb-8">
           Random 1v1 dog face battle arena. Verify your PDL rating, win the bark off, climb the global top dog ladder.
         </p>
@@ -27,10 +31,22 @@ export default async function HomePage() {
           <Link href="/camera-check" className="bg-amber-500 hover:bg-amber-400 text-black font-semibold px-6 py-3 rounded-lg">
             Start Camera Check
           </Link>
+          <Link href="/arena" className="bg-red-600 hover:bg-red-500 text-white font-semibold px-6 py-3 rounded-lg">
+            Enter Arena
+          </Link>
           <Link href="/leaderboard" className="border border-zinc-700 hover:border-zinc-500 px-6 py-3 rounded-lg">
-            View Leaderboard
+            Leaderboard
           </Link>
         </div>
+      </section>
+
+      <section className="flex flex-wrap justify-center gap-2 mb-16 text-xs text-zinc-600">
+        {["Camera Check", "Lab PDL Scan", "Bark Battle", "Climb ELO"].map((step, i) => (
+          <span key={step} className="flex items-center gap-2">
+            {i > 0 && <span className="text-zinc-700">→</span>}
+            <span className="bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full">{step}</span>
+          </span>
+        ))}
       </section>
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">

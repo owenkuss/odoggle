@@ -1,23 +1,5 @@
 import Link from "next/link";
 
-export function Nav() {
-  return (
-    <header className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
-      <Link href="/" className="text-xl font-bold text-amber-400">
-        Odoggle
-      </Link>
-      <nav className="flex gap-4 text-sm text-zinc-400">
-        <Link href="/lab" className="hover:text-white">The Lab</Link>
-        <Link href="/arena" className="hover:text-white">Arena</Link>
-        <Link href="/leaderboard" className="hover:text-white">Leaderboard</Link>
-        <Link href="/spectate" className="hover:text-white">Vote</Link>
-        <Link href="/room" className="hover:text-white">Private Room</Link>
-        <Link href="/pricing" className="hover:text-white">Pro</Link>
-      </nav>
-    </header>
-  );
-}
-
 export function Footer() {
   return (
     <footer className="border-t border-zinc-800 px-6 py-8 mt-16 text-sm text-zinc-500">

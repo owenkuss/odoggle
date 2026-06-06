@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { MATCH_DURATION_SEC } from "@odoggle/shared";
 import { ReportButton } from "@/components/report-button";
 import { usePlayer } from "@/lib/player-context";
@@ -25,6 +26,9 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
   >("idle");
   const [matchId, setMatchId] = useState<string | null>(null);
   const [opponentName, setOpponentName] = useState("Opponent");
+  const [opponentElo, setOpponentElo] = useState(0);
+  const [connectionState, setConnectionState] = useState<string>("");
+  const [videoMuted, setVideoMuted] = useState(false);
   const [timer, setTimer] = useState(MATCH_DURATION_SEC);
   const [voteCount, setVoteCount] = useState(0);
   const [resultText, setResultText] = useState("");
@@ -72,6 +76,7 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
         if (opp) signal.relaySignal(opp, payload);
       },
       onConnectionState: (state) => {
+        setConnectionState(state);
         if (state === "connected" && matchIdRef.current) {
           signal.battleReady(matchIdRef.current);
         }
@@ -82,9 +87,7 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
     if (localVideoRef.current) localVideoRef.current.srcObject = local;
 
     signal.onMessage(async (msg) => {
-      if (msg.type === "room_waiting") {
-        setPhase("waiting_room");
-      }
+      if (msg.type === "room_waiting") setPhase("waiting_room");
 
       if (msg.type === "match_found") {
         const mid = String(msg.matchId);
@@ -95,6 +98,7 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
         const opp = p1.id === player.id ? p2 : p1;
         opponentIdRef.current = opp.id;
         setOpponentName(opp.displayName);
+        setOpponentElo(opp.elo);
         setPhase("matched");
 
         if (player.id < opp.id) {
@@ -115,17 +119,14 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
         setPhase("voting");
         setVoteCount(0);
       }
-      if (msg.type === "voting_extended") {
-        setVoteCount((c) => c);
+      if (msg.type === "vote_recorded") {
+        setVoteCount(Number(msg.totalVotes ?? 0));
       }
-      if (msg.type === "vote_recorded") setVoteCount(Number(msg.totalVotes ?? 0));
 
       if (msg.type === "match_result") {
         const winnerId = String(msg.winnerId);
         const won = winnerId === player.id;
-        const delta = won
-          ? Number(msg.winnerEloDelta ?? 0)
-          : Number(msg.loserEloDelta ?? 0);
+        const delta = won ? Number(msg.winnerEloDelta ?? 0) : Number(msg.loserEloDelta ?? 0);
         const newEloVal = won
           ? Number(msg.winnerElo ?? player.elo)
           : Number(msg.loserElo ?? player.elo);
@@ -139,11 +140,11 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
         setResultText(
           Boolean(msg.unranked)
             ? won
-              ? "You won! (unranked)"
-              : "You lost. (unranked)"
+              ? "You won the bark battle! (unranked)"
+              : `${opponentName} won. (unranked)`
             : won
-              ? `You won! +${delta} ELO`
-              : `You lost. ${delta} ELO`
+              ? `Victory! +${delta} ELO`
+              : `Defeat. ${delta} ELO`
         );
         setPhase("result");
       }
@@ -151,7 +152,7 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
 
     if (roomCode) signal.enterRoom(roomCode);
     else signal.joinQueue();
-  }, [player, roomCode, updateElo, recordWin, recordLoss]);
+  }, [player, roomCode, opponentName, updateElo, recordWin, recordLoss]);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -165,43 +166,77 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
       )}
       {phase === "queued" && (
         <div className="text-center text-zinc-400 py-8">
-          Finding opponent...
-          <p className="text-xs text-zinc-600 mt-2">You may be pulled as jury to vote on other matches</p>
+          <div className="animate-pulse mb-2">Finding opponent...</div>
+          <p className="text-xs text-zinc-600">You may be pulled as jury to vote on other matches</p>
         </div>
       )}
       {phase === "waiting_room" && (
         <div className="text-center text-zinc-400 py-8">
-          Waiting for friend to join room <span className="font-mono text-amber-400">{roomCode}</span>...
+          Waiting for friend in room{" "}
+          <span className="font-mono text-amber-400">{roomCode}</span>...
         </div>
       )}
       {(phase === "matched" || phase === "battle" || phase === "voting") && (
         <>
-          <div className="flex gap-4">
+          {phase === "matched" && connectionState !== "connected" && (
+            <div className="text-center text-sm text-zinc-500 mb-4">
+              Connecting video... ({connectionState || "negotiating"})
+            </div>
+          )}
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <div className="text-xs text-zinc-500 mb-1">You · {player.displayName}</div>
-              <video ref={localVideoRef} className="w-full rounded-lg bg-black aspect-video" muted playsInline autoPlay />
+              <div className="text-xs text-zinc-500 mb-1">
+                You · {player.displayName} · {player.elo} ELO
+              </div>
+              <video
+                ref={localVideoRef}
+                className="w-full rounded-lg bg-black aspect-video object-cover"
+                muted
+                playsInline
+                autoPlay
+              />
             </div>
             <div className="flex-1">
-              <div className="text-xs text-zinc-500 mb-1">{opponentName}</div>
-              <video ref={remoteVideoRef} className="w-full rounded-lg bg-black aspect-video" muted playsInline autoPlay />
+              <div className="text-xs text-zinc-500 mb-1">
+                {opponentName} · {opponentElo} ELO
+              </div>
+              <video
+                ref={remoteVideoRef}
+                className="w-full rounded-lg bg-black aspect-video object-cover"
+                muted
+                playsInline
+                autoPlay
+              />
             </div>
           </div>
           {phase === "battle" && (
-            <div className="text-center mt-4 text-3xl font-bold text-amber-400">{timer}s</div>
+            <div className="text-center mt-4">
+              <div className="text-4xl font-bold text-amber-400 tabular-nums">{timer}s</div>
+              <div className="text-xs text-zinc-600 mt-1">Bark battle in progress</div>
+            </div>
           )}
           {phase === "voting" && (
             <div className="text-center mt-4 text-zinc-400">
               Audience voting... ({voteCount} / 3 votes)
               <p className="text-xs text-zinc-600 mt-2">
-                Share <a href="/spectate" className="text-amber-400 hover:underline">/spectate</a> for friends to vote
+                Friends can vote at{" "}
+                <Link href="/spectate" className="text-amber-400 hover:underline">
+                  /spectate
+                </Link>
               </p>
             </div>
           )}
-          <div className="flex gap-3 mt-4 justify-center">
-            <button onClick={() => webrtcRef.current?.mute()} className="px-4 py-2 bg-zinc-800 rounded-lg text-sm">
-              Mute
+          <div className="flex gap-3 mt-4 justify-center flex-wrap">
+            <button
+              onClick={() => setVideoMuted(webrtcRef.current?.toggleVideoMute() ?? false)}
+              className="px-4 py-2 bg-zinc-800 rounded-lg text-sm"
+            >
+              {videoMuted ? "Show cam" : "Hide cam"}
             </button>
-            <button onClick={() => signalRef.current?.skip()} className="px-4 py-2 bg-zinc-800 rounded-lg text-sm">
+            <button
+              onClick={() => signalRef.current?.skip()}
+              className="px-4 py-2 bg-zinc-800 rounded-lg text-sm"
+            >
               Skip
             </button>
             {matchId && <ReportButton matchId={matchId} />}
@@ -210,22 +245,31 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
       )}
       {phase === "result" && (
         <div className="text-center py-8">
-          <div className="text-2xl font-bold mb-2">{resultText}</div>
-          {eloDelta !== 0 && newElo !== null && (
-            <div className="text-zinc-500 mb-4">New ELO: {newElo}</div>
+          <div className="text-3xl font-bold mb-2">{resultText}</div>
+          {newElo !== null && (
+            <div className="text-zinc-500 mb-6">
+              {eloDelta !== 0 && <span className="mr-2">{eloDelta > 0 ? "+" : ""}{eloDelta} ELO ·</span>}
+              New rating: {newElo}
+            </div>
           )}
-          <button
-            onClick={() => {
-              cleanup();
-              setPhase("idle");
-              setResultText("");
-              setEloDelta(0);
-              setNewElo(null);
-            }}
-            className="bg-amber-500 text-black px-6 py-3 rounded-lg font-semibold"
-          >
-            Queue again
-          </button>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <button
+              onClick={() => {
+                cleanup();
+                setPhase("idle");
+                setResultText("");
+                setEloDelta(0);
+                setNewElo(null);
+                setConnectionState("");
+              }}
+              className="bg-amber-500 text-black px-6 py-3 rounded-lg font-semibold"
+            >
+              Queue again
+            </button>
+            <Link href="/leaderboard" className="border border-zinc-700 px-6 py-3 rounded-lg">
+              Leaderboard
+            </Link>
+          </div>
         </div>
       )}
     </div>

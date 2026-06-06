@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { usePlayer } from "@/lib/player-context";
@@ -37,7 +38,9 @@ export function ProfileBar() {
   return (
     <div className="fixed top-4 right-4 z-40 flex items-center gap-2 text-sm">
       <span className="text-zinc-400">{player.displayName}</span>
-      <span className="text-zinc-600">{player.elo} ELO</span>
+      <Link href="/profile" className="text-zinc-600 hover:text-amber-400 text-xs">
+        {player.elo} ELO
+      </Link>
       {player.isPro && <span className="text-purple-400 text-xs">Pro</span>}
       {session ? (
         <button onClick={() => signOut()} className="text-zinc-500 hover:text-white text-xs">

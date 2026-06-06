@@ -330,6 +330,7 @@ function broadcastMatchResult(matchId: string, match: NonNullable<ReturnType<typ
 }
 
 setInterval(() => matchmaker.widenQueues(), 5000);
+setInterval(() => matchmaker.cleanupOldMatches(), 600_000);
 
 wss.on("connection", (ws) => {
   send(ws, { type: "connected", online: getOnlineCount() });

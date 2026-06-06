@@ -1,11 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { JuryVotePanel, type MatchContestant } from "@/components/jury-vote-panel";
 import { useJury } from "@/lib/jury-context";
-import { usePlayer } from "@/lib/player-context";
-import { SignalClient } from "@/lib/signal-client";
 
 interface VotingMatch {
   matchId: string;
@@ -17,14 +15,10 @@ interface VotingMatch {
 }
 
 export default function SpectatePage() {
-  const { player } = usePlayer();
-  const { connectSpectator } = useJury();
+  const { connectSpectator, activeDuty } = useJury();
   const [matches, setMatches] = useState<VotingMatch[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeMatch, setActiveMatch] = useState<VotingMatch | null>(null);
-  const [voted, setVoted] = useState(false);
-  const [voteCount, setVoteCount] = useState(0);
-  const signalRef = useRef<SignalClient | null>(null);
+  const [joining, setJoining] = useState<string | null>(null);
 
   const loadMatches = useCallback(async () => {
     const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -43,61 +37,22 @@ export default function SpectatePage() {
     return () => clearInterval(iv);
   }, [loadMatches]);
 
-  useEffect(() => () => signalRef.current?.disconnect(), []);
-
   async function joinVote(match: VotingMatch) {
-    setActiveMatch(match);
-    setVoted(false);
-    setVoteCount(match.votes);
-
-    signalRef.current?.disconnect();
-    const signal = new SignalClient();
-    signalRef.current = signal;
-    await signal.connect();
-    signal.register(player.id, player.displayName, player.elo, player.isPro);
-    signal.onMessage((msg) => {
-      if (msg.type === "vote_recorded" && msg.matchId === match.matchId) {
-        setVoteCount(Number(msg.totalVotes ?? 0));
-      }
-      if (msg.type === "match_result" && msg.matchId === match.matchId) {
-        setActiveMatch(null);
-        void loadMatches();
-      }
-    });
-    signal.spectate(match.matchId);
+    setJoining(match.matchId);
     await connectSpectator(match.matchId);
-  }
-
-  function castVote(votedForId: string) {
-    if (!activeMatch || !signalRef.current) return;
-    signalRef.current.vote(activeMatch.matchId, votedForId);
-    setVoted(true);
+    setJoining(null);
   }
 
   return (
     <div className="max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold mb-2 text-center">Audience Vote</h1>
       <p className="text-zinc-500 text-center mb-8">
-        Cast your vote on live bark battles. Players waiting in queue may be pulled as jury automatically.
+        Pick a live match and vote for the better dog. Queued players may get jury duty popups automatically.
       </p>
 
-      {activeMatch && (
-        <div className="mb-8">
-          <JuryVotePanel
-            matchId={activeMatch.matchId}
-            player1={activeMatch.player1}
-            player2={activeMatch.player2}
-            totalVotes={voteCount}
-            minVotes={activeMatch.minVotes}
-            onVote={castVote}
-            voted={voted}
-          />
-          <button
-            onClick={() => setActiveMatch(null)}
-            className="w-full mt-3 text-sm text-zinc-500 hover:text-zinc-300"
-          >
-            Back to list
-          </button>
+      {activeDuty && (
+        <div className="mb-6 text-center text-sm text-green-400">
+          Vote panel open below — scroll down if needed
         </div>
       )}
 
@@ -120,18 +75,20 @@ export default function SpectatePage() {
           >
             <div>
               <div className="font-semibold">
-                {m.player1.displayName} vs {m.player2.displayName}
+                {m.player1.displayName}{" "}
+                <span className="text-zinc-600 font-normal">vs</span> {m.player2.displayName}
               </div>
               <div className="text-xs text-zinc-500 mt-1">
-                {m.votes} / {m.minVotes} votes
+                {m.player1.elo} vs {m.player2.elo} ELO · {m.votes}/{m.minVotes} votes
                 {m.unranked && " · unranked"}
               </div>
             </div>
             <button
               onClick={() => joinVote(m)}
-              className="bg-amber-500 text-black px-4 py-2 rounded-lg text-sm font-semibold shrink-0"
+              disabled={joining === m.matchId}
+              className="bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black px-4 py-2 rounded-lg text-sm font-semibold shrink-0"
             >
-              Vote
+              {joining === m.matchId ? "..." : "Vote"}
             </button>
           </div>
         ))}

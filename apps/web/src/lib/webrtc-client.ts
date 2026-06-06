@@ -9,11 +9,11 @@ export interface WebRTCCallbacks {
 export class WebRTCClient {
   private pc: RTCPeerConnection;
   private localStream: MediaStream | null = null;
+  private pendingCandidates: RTCIceCandidateInit[] = [];
+  private videoMuted = false;
 
   constructor(private callbacks: WebRTCCallbacks) {
-    const iceServers: RTCIceServer[] = [
-      { urls: "stun:stun.l.google.com:19302" },
-    ];
+    const iceServers: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
     const turnUrl = process.env.NEXT_PUBLIC_TURN_URL;
     const turnUser = process.env.NEXT_PUBLIC_TURN_USERNAME;
     const turnCred = process.env.NEXT_PUBLIC_TURN_CREDENTIAL;
@@ -26,11 +26,23 @@ export class WebRTCClient {
       if (ev.streams[0]) this.callbacks.onRemoteStream(ev.streams[0]);
     };
     this.pc.onicecandidate = (ev) => {
-      if (ev.candidate) this.callbacks.onSignal({ candidate: ev.candidate });
+      if (ev.candidate) this.callbacks.onSignal({ candidate: ev.candidate.toJSON() });
     };
     this.pc.onconnectionstatechange = () => {
       this.callbacks.onConnectionState(this.pc.connectionState);
     };
+  }
+
+  private async flushCandidates(): Promise<void> {
+    const pending = [...this.pendingCandidates];
+    this.pendingCandidates = [];
+    for (const c of pending) {
+      try {
+        await this.pc.addIceCandidate(c);
+      } catch {
+        /* ignore stale candidates */
+      }
+    }
   }
 
   async startLocalVideo(): Promise<MediaStream> {
@@ -39,10 +51,6 @@ export class WebRTCClient {
       audio: false,
     });
     this.localStream.getTracks().forEach((t) => this.pc.addTrack(t, this.localStream!));
-    return this.localStream;
-  }
-
-  getLocalStream(): MediaStream | null {
     return this.localStream;
   }
 
@@ -55,18 +63,33 @@ export class WebRTCClient {
   async handleSignal(payload: Record<string, unknown>): Promise<void> {
     if (payload.offer) {
       await this.pc.setRemoteDescription(payload.offer as RTCSessionDescriptionInit);
+      await this.flushCandidates();
       const answer = await this.pc.createAnswer();
       await this.pc.setLocalDescription(answer);
       this.callbacks.onSignal({ answer });
     } else if (payload.answer) {
       await this.pc.setRemoteDescription(payload.answer as RTCSessionDescriptionInit);
+      await this.flushCandidates();
     } else if (payload.candidate) {
-      await this.pc.addIceCandidate(payload.candidate as RTCIceCandidateInit);
+      const candidate = payload.candidate as RTCIceCandidateInit;
+      if (this.pc.remoteDescription) {
+        try {
+          await this.pc.addIceCandidate(candidate);
+        } catch {
+          /* ignore */
+        }
+      } else {
+        this.pendingCandidates.push(candidate);
+      }
     }
   }
 
-  mute(): void {
-    this.localStream?.getAudioTracks().forEach((t) => (t.enabled = false));
+  toggleVideoMute(): boolean {
+    this.videoMuted = !this.videoMuted;
+    this.localStream?.getVideoTracks().forEach((t) => {
+      t.enabled = !this.videoMuted;
+    });
+    return this.videoMuted;
   }
 
   destroy(): void {

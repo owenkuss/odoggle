@@ -451,6 +451,15 @@ export class Matchmaker {
       hoursPerDay: 18,
     };
   }
+
+  cleanupOldMatches(maxAgeMs = 3600_000): void {
+    const cutoff = Date.now() - maxAgeMs;
+    for (const [id, match] of this.matches) {
+      if (match.phase === "done" && (match.startedAt ?? 0) < cutoff) {
+        this.matches.delete(id);
+      }
+    }
+  }
 }
 
 export const matchmaker = new Matchmaker();

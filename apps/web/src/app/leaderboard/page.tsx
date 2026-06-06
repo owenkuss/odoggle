@@ -23,6 +23,7 @@ export default async function LeaderboardPage() {
               <th className="text-left p-4">#</th>
               <th className="text-left p-4">Player</th>
               <th className="text-right p-4">ELO</th>
+              <th className="text-right p-4 hidden sm:table-cell">Peak</th>
               <th className="text-right p-4">W-L</th>
             </tr>
           </thead>
@@ -30,7 +31,7 @@ export default async function LeaderboardPage() {
             {entries.length === 0 && (
               <tr><td colSpan={4} className="p-8 text-center text-zinc-600">No ranked players yet. Be the first!</td></tr>
             )}
-            {entries.map((e: { rank: number; displayName: string; elo: number; wins: number; losses: number; isTopDog: boolean; isPro: boolean }) => (
+            {entries.map((e: { rank: number; displayName: string; elo: number; peakElo?: number; wins: number; losses: number; isTopDog: boolean; isPro: boolean }) => (
               <tr key={e.rank} className="border-b border-zinc-800/50 hover:bg-zinc-800/30">
                 <td className="p-4 font-mono">{e.rank}</td>
                 <td className="p-4">
@@ -39,6 +40,7 @@ export default async function LeaderboardPage() {
                   {e.isPro && <span className="ml-2 text-xs text-purple-400">Pro</span>}
                 </td>
                 <td className="p-4 text-right font-bold">{e.elo}</td>
+                <td className="p-4 text-right text-zinc-500 hidden sm:table-cell">{e.peakElo ?? e.elo}</td>
                 <td className="p-4 text-right text-zinc-500">{e.wins}-{e.losses}</td>
               </tr>
             ))}
