@@ -1,10 +1,18 @@
 "use client";
 
+import { Suspense, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { PRO_PRICE_USD } from "@odoggle/shared";
 import { usePlayer } from "@/lib/player-context";
 
-export default function PricingPage() {
+function PricingContent() {
   const { player, setPro } = usePlayer();
+  const searchParams = useSearchParams();
+  const justPaid = searchParams.get("success") === "1";
+
+  useEffect(() => {
+    if (justPaid && !player.isPro) setPro(true);
+  }, [justPaid, player.isPro, setPro]);
 
   async function checkout() {
     const res = await fetch("/api/pro/checkout", {
@@ -14,16 +22,20 @@ export default function PricingPage() {
     });
     const data = await res.json();
     if (data.url) window.location.href = data.url;
-    else if (data.demo) {
-      setPro(true);
-      alert("Pro activated (demo mode — configure Stripe for production)");
-    }
+    else if (data.demo) setPro(true);
   }
 
   return (
     <div className="max-w-lg mx-auto text-center">
       <h1 className="text-3xl font-bold mb-4">Odoggle Pro</h1>
       <p className="text-zinc-400 mb-8">One-time upgrade. No subscription.</p>
+
+      {justPaid && (
+        <div className="mb-6 bg-green-500/10 border border-green-500/30 text-green-400 rounded-xl p-4 text-sm">
+          Payment received — Pro unlocked. Thank you!
+        </div>
+      )}
+
       <div className="bg-zinc-900 border border-amber-500/30 rounded-xl p-8">
         <div className="text-4xl font-bold text-amber-400 mb-2">${PRO_PRICE_USD}</div>
         <ul className="text-left text-sm text-zinc-400 space-y-2 mb-8">
@@ -42,5 +54,13 @@ export default function PricingPage() {
       </div>
       <p className="text-xs text-zinc-600 mt-6">14-day no-questions-asked refund.</p>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={<div className="text-center text-zinc-500 py-16">Loading...</div>}>
+      <PricingContent />
+    </Suspense>
   );
 }
