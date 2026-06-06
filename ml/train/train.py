@@ -32,16 +32,18 @@ def prepare_yolo_dataset(data_dir: Path, out_dir: Path) -> Path:
 
             meta = json.loads(label_path.read_text()) if label_path.suffix == ".json" else None
             if meta:
-                bbox = meta.get("bbox") or meta.get("bounding_box")
-                if not bbox:
+                bbox = meta.get("bounding_boxes") or meta.get("bbox") or meta.get("bounding_box")
+                if not bbox or len(bbox) != 4:
                     continue
-                x, y, w, h = bbox if len(bbox) == 4 else (bbox["x"], bbox["y"], bbox["w"], bbox["h"])
-                img_w = meta.get("width", 1)
-                img_h = meta.get("height", 1)
-                cx = (x + w / 2) / img_w
-                cy = (y + h / 2) / img_h
-                nw = w / img_w
-                nh = h / img_h
+                from PIL import Image
+
+                with Image.open(img_path) as im:
+                    img_w, img_h = im.size
+                x1, y1, x2, y2 = map(float, bbox)
+                cx = ((x1 + x2) / 2) / img_w
+                cy = ((y1 + y2) / 2) / img_h
+                nw = (x2 - x1) / img_w
+                nh = (y2 - y1) / img_h
             else:
                 parts = label_path.read_text().strip().split()
                 if len(parts) < 5:

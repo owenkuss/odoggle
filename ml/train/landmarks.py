@@ -31,15 +31,15 @@ class DogFLWDataset(Dataset):
             if not label_path.exists():
                 continue
             meta = json.loads(label_path.read_text())
-            landmarks = meta.get("landmarks") or meta.get("keypoints")
+            landmarks = meta.get("labels") or meta.get("landmarks") or meta.get("keypoints")
             if not landmarks or len(landmarks) < LANDMARK_COUNT:
                 continue
             coords: list[float] = []
             for pt in landmarks[:LANDMARK_COUNT]:
                 if isinstance(pt, dict):
-                    coords.extend([pt["x"], pt["y"]])
+                    coords.extend([float(pt["x"]), float(pt["y"])])
                 else:
-                    coords.extend([pt[0], pt[1]])
+                    coords.extend([float(pt[0]), float(pt[1])])
             self.samples.append((img_path, coords))
 
         self.transform = transforms.Compose(

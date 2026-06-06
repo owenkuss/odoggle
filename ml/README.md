@@ -22,13 +22,18 @@ Or: `.\ml\scripts\run_pipeline.ps1`
 
 ### 1. Get the dataset
 
+Images are on **Kaggle** (not in the GitHub repo):
+
+https://www.kaggle.com/datasets/georgemartvel/dogflw
+
 ```bash
-python ml/scripts/download_dogflw.py
-# or
-git clone https://github.com/martvelge/DogFLW ml/data/dogflw
+pip install kaggle
+# API token: kaggle.com → Settings → Create New Token → save as ~/.kaggle/kaggle.json
+kaggle datasets download -d georgemartvel/dogflw -p ml/data
+python ml/scripts/download_dogflw.py --zip ml/data/dogflw.zip
 ```
 
-Kaggle mirror: download zip and pass `--zip path/to/dogflw.zip`
+Or download the zip manually from Kaggle and pass `--zip path/to/file.zip`.
 
 Expected layout:
 
