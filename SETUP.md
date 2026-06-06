@@ -6,6 +6,19 @@
 C:\Users\owenk\Projects\odoggle
 ```
 
+## Push to GitHub + deploy
+
+**One-time GitHub auth + push** (opens browser as owenkuss):
+
+```cmd
+cd C:\Users\owenk\Projects\odoggle
+scripts\setup-github.cmd
+```
+
+**Deploy:** [infra/VERCEL.md](infra/VERCEL.md) (web) · [infra/DEPLOY.md](infra/DEPLOY.md) (server) · or run `scripts\deploy.ps1`
+
+---
+
 ## Easiest: double-click or run setup script
 
 **Command Prompt (cmd.exe):**
