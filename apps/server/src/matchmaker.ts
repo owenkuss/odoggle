@@ -452,6 +452,13 @@ export class Matchmaker {
     };
   }
 
+  cancelMatch(matchId: string): ActiveMatch | null {
+    const match = this.matches.get(matchId);
+    if (!match || match.phase === "done") return null;
+    match.phase = "done";
+    return match;
+  }
+
   cleanupOldMatches(maxAgeMs = 3600_000): void {
     const cutoff = Date.now() - maxAgeMs;
     for (const [id, match] of this.matches) {

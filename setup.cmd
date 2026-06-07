@@ -29,25 +29,31 @@ copy /Y infra\.env.example apps\server\.env >nul
 echo   apps\web\.env.local
 echo   apps\server\.env
 
-echo.
-echo Building shared package...
-call npm run build -w @odoggle/shared
-if errorlevel 1 exit /b 1
-
 where docker >nul 2>&1
 if errorlevel 1 (
   echo.
-  echo NOTE: Docker not installed — skipping Postgres/Redis.
+  echo NOTE: Docker not installed — Postgres/Redis URLs left commented in .env
   echo The app runs fine in-memory without Docker.
   echo To add persistence later: install Docker Desktop, then run: npm run db:up
 ) else (
   echo.
   echo Starting Postgres + Redis...
   call npm run db:up
+  if not errorlevel 1 (
+    echo Enabling DATABASE_URL and REDIS_URL in apps\server\.env...
+    powershell -NoProfile -Command ^
+      "$p='apps/server/.env'; $c=Get-Content $p -Raw; if ($c -notmatch 'DATABASE_URL=') { $c += \"`nDATABASE_URL=postgresql://odoggle:odoggle@localhost:5432/odoggle`nREDIS_URL=redis://localhost:6379`n\"; Set-Content $p $c -NoNewline }"
+  )
 )
 
 echo.
+echo Building shared package...
+call npm run build -w @odoggle/shared
+if errorlevel 1 exit /b 1
+
+echo.
 echo === Ready ===
-echo Start the app:  npm run dev
+echo Start the app:  dev.cmd
+echo   (or npm run dev from Command Prompt — not PowerShell if scripts are blocked)
 echo Then open:       http://localhost:3000
 echo.

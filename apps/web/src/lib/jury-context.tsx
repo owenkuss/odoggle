@@ -1,9 +1,12 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { JuryVotePanel, type MatchContestant } from "@/components/jury-vote-panel";
 import { usePlayer } from "@/lib/player-context";
 import { SignalClient } from "@/lib/signal-client";
+
+const JURY_PATHS = ["/arena", "/spectate", "/room"];
 
 interface JuryDuty {
   matchId: string;
@@ -22,12 +25,21 @@ interface JuryContextValue {
 const JuryContext = createContext<JuryContextValue | null>(null);
 
 export function JuryProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const { player } = usePlayer();
   const signalRef = useRef<SignalClient | null>(null);
   const [activeDuty, setActiveDuty] = useState<JuryDuty | null>(null);
   const [voted, setVoted] = useState(false);
 
+  const juryEnabled = JURY_PATHS.some((p) => pathname.startsWith(p));
+
   useEffect(() => {
+    if (!juryEnabled) {
+      signalRef.current?.disconnect();
+      signalRef.current = null;
+      return;
+    }
+
     const signal = new SignalClient();
     signalRef.current = signal;
     void signal.connect().then(() => {
@@ -73,13 +85,19 @@ export function JuryProvider({ children }: { children: React.ReactNode }) {
       signal.disconnect();
       signalRef.current = null;
     };
-  }, [player.id, player.displayName, player.elo, player.isPro]);
+  }, [juryEnabled, player.id, player.displayName, player.elo, player.isPro]);
 
   const dismissDuty = useCallback(() => setActiveDuty(null), []);
 
   const connectSpectator = useCallback(async (matchId: string) => {
-    signalRef.current?.spectate(matchId);
-  }, []);
+    if (!signalRef.current) {
+      const signal = new SignalClient();
+      signalRef.current = signal;
+      await signal.connect();
+      signal.register(player.id, player.displayName, player.elo, player.isPro);
+    }
+    signalRef.current.spectate(matchId);
+  }, [player.id, player.displayName, player.elo, player.isPro]);
 
   const castVote = useCallback((votedForId: string) => {
     setActiveDuty((d) => {

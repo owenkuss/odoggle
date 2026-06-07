@@ -1,15 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { getRankTitle, PDL_SCAN_TTL_MS } from "@odoggle/shared";
+import { useEffect, useState } from "react";
+import { getRankTitle, PDL_SCAN_TTL_MS, type PdlResult } from "@odoggle/shared";
 import { PdlBar } from "@/components/ui";
+import { loadPdlHistory } from "@/lib/pdl-history";
 import { usePlayer } from "@/lib/player-context";
+
+function formatScanDate(ts: number): string {
+  return new Date(ts).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
 export default function ProfilePage() {
   const { player } = usePlayer();
+  const [history, setHistory] = useState<PdlResult[]>([]);
   const rank = getRankTitle(player.elo);
   const pdlFresh =
     player.lastPdl && Date.now() - player.lastPdl.scannedAt < PDL_SCAN_TTL_MS;
+
+  useEffect(() => {
+    setHistory(loadPdlHistory());
+  }, [player.lastPdl?.scannedAt]);
 
   return (
     <div className="max-w-lg mx-auto">
@@ -76,6 +92,23 @@ export default function ProfilePage() {
           </p>
         )}
       </div>
+
+      {history.length > 0 && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+          <h2 className="font-semibold mb-4">Scan history</h2>
+          <ul className="space-y-2">
+            {history.map((scan) => (
+              <li
+                key={scan.scannedAt}
+                className="flex items-center justify-between text-sm border-b border-zinc-800 last:border-0 pb-2 last:pb-0"
+              >
+                <span className="text-zinc-500">{formatScanDate(scan.scannedAt)}</span>
+                <span className="font-semibold text-amber-400 tabular-nums">{scan.composite}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="flex gap-3">
         <Link href="/lab" className="flex-1 text-center bg-zinc-800 hover:bg-zinc-700 py-3 rounded-lg text-sm">

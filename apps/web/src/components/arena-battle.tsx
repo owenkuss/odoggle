@@ -123,6 +123,15 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
         setVoteCount(Number(msg.totalVotes ?? 0));
       }
 
+      if (msg.type === "match_cancelled") {
+        cleanup();
+        setPhase("idle");
+        setConnectionState("");
+        setMatchId(null);
+        matchIdRef.current = null;
+        return;
+      }
+
       if (msg.type === "match_result") {
         const winnerId = String(msg.winnerId);
         const won = winnerId === player.id;
@@ -167,7 +176,17 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
       {phase === "queued" && (
         <div className="text-center text-zinc-400 py-8">
           <div className="animate-pulse mb-2">Finding opponent...</div>
-          <p className="text-xs text-zinc-600">You may be pulled as jury to vote on other matches</p>
+          <p className="text-xs text-zinc-600 mb-4">You may be pulled as jury to vote on other matches</p>
+          <button
+            onClick={() => {
+              signalRef.current?.skip();
+              cleanup();
+              setPhase("idle");
+            }}
+            className="px-4 py-2 bg-zinc-800 rounded-lg text-sm"
+          >
+            Leave queue
+          </button>
         </div>
       )}
       {phase === "waiting_room" && (
@@ -234,7 +253,15 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
               {videoMuted ? "Show cam" : "Hide cam"}
             </button>
             <button
-              onClick={() => signalRef.current?.skip()}
+              onClick={() => {
+                if (matchIdRef.current) signalRef.current?.skip(matchIdRef.current);
+                else signalRef.current?.skip();
+                cleanup();
+                setPhase("idle");
+                setMatchId(null);
+                matchIdRef.current = null;
+                setConnectionState("");
+              }}
               className="px-4 py-2 bg-zinc-800 rounded-lg text-sm"
             >
               Skip

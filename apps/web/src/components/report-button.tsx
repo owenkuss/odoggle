@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ReportReason } from "@odoggle/shared";
+import { apiFetch } from "@/lib/api";
 import { usePlayer } from "@/lib/player-context";
 
 const REASONS: { value: ReportReason; label: string }[] = [
@@ -18,8 +19,7 @@ export function ReportButton({ matchId }: { matchId?: string }) {
   const [sent, setSent] = useState(false);
 
   async function submit(reason: ReportReason) {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-    await fetch(`${base}/api/report`, {
+    await apiFetch("/api/report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reporterId: player.id, matchId, reason }),

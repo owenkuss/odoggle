@@ -9,8 +9,10 @@ Privacy-first 1v1 dog face battle platform. On-device PDL scoring, WebRTC matche
 ```cmd
 cd C:\Users\owenk\Projects\odoggle
 setup.cmd
-npm run dev
+dev.cmd
 ```
+
+If PowerShell blocks `npm`, use `dev.cmd` or `npm.cmd run dev` instead.
 
 **Windows (PowerShell) / macOS / Linux:**
 
@@ -51,7 +53,7 @@ npm run dev
 ## Commands
 
 ```bash
-npm run dev          # web + server
+npm run dev          # web + server (Windows: dev.cmd if PowerShell blocks npm)
 npm run build        # full monorepo build
 npm run db:up        # postgres + redis via docker
 npm run ml:download  # clone DogFLW dataset

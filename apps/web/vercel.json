@@ -1,8 +1,6 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd ../.. && npm run build -w @odoggle/shared && npm run build -w @odoggle/web",
-  "devCommand": "npm run dev",
-  "installCommand": "cd ../.. && npm install",
   "framework": "nextjs",
-  "regions": ["iad1"]
+  "installCommand": "cd ../.. && npm install",
+  "buildCommand": "cd ../.. && npm run build -w @odoggle/shared && npm run build -w @odoggle/web",
+  "outputDirectory": ".next"
 }

@@ -4,6 +4,15 @@ const nextConfig = {
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
     return config;
   },
+  async rewrites() {
+    const target = process.env.API_PROXY_TARGET ?? "http://localhost:3001";
+    return [
+      {
+        source: "/api/backend/:path*",
+        destination: `${target}/api/:path*`,
+      },
+    ];
+  },
   async headers() {
     return [
       {

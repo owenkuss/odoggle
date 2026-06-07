@@ -27,7 +27,19 @@ const app = express();
 const httpServer = createServer(app);
 const wss = new WebSocketServer({ server: httpServer, path: "/signal" });
 
-app.use(cors({ origin: process.env.WEB_ORIGIN ?? "http://localhost:3000" }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      const allowed = process.env.WEB_ORIGIN ?? "http://localhost:3000";
+      if (origin === allowed) return callback(null, true);
+      if (process.env.NODE_ENV !== "production" && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error(`CORS blocked: ${origin}`));
+    },
+  })
+);
 
 app.post("/api/pro/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   const creemSecret = process.env.CREEM_WEBHOOK_SECRET;
@@ -505,9 +517,27 @@ async function handleMessage(ws: WebSocket, msg: Record<string, unknown>): Promi
       });
       break;
     }
-    case "skip":
+    case "skip": {
+      const meta = getClientMeta(ws);
+      if (!meta) return;
+      const matchId = String(msg.matchId ?? "");
+      if (matchId) {
+        const match = matchmaker.getMatch(matchId);
+        if (
+          match &&
+          match.phase !== "done" &&
+          (match.player1.id === meta.playerId || match.player2.id === meta.playerId)
+        ) {
+          matchmaker.cancelMatch(matchId);
+          clearVoteTimers(matchId);
+          sendToMatch(matchId, { type: "match_cancelled", matchId, by: meta.playerId });
+          return;
+        }
+      }
+      matchmaker.leaveQueue(meta.playerId);
       send(ws, { type: "skipped" });
       break;
+    }
     default:
       send(ws, { type: "error", message: `Unknown type: ${msg.type}` });
   }
@@ -515,6 +545,17 @@ async function handleMessage(ws: WebSocket, msg: Record<string, unknown>): Promi
 
 async function start(): Promise<void> {
   await initDb();
+
+  httpServer.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(
+        `Port ${PORT} is already in use. Close the other dev server or set PORT in apps/server/.env`
+      );
+      process.exit(1);
+    }
+    throw err;
+  });
+
   httpServer.listen(PORT, () => {
     console.log(`Odoggle server listening on :${PORT}`);
   });

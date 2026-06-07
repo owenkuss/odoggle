@@ -26,16 +26,18 @@ scripts\setup-github.cmd
 ```cmd
 cd C:\Users\owenk\Projects\odoggle
 setup.cmd
-npm run dev
+dev.cmd
 ```
 
-**PowerShell:**
+**PowerShell** (if `npm` fails with “running scripts is disabled”):
 
 ```powershell
 cd C:\Users\owenk\Projects\odoggle
 .\setup.cmd
-npm run dev
+.\dev.cmd
 ```
+
+Or use `npm.cmd run dev` instead of `npm run dev`.
 
 Open http://localhost:3000
 
@@ -84,6 +86,8 @@ Without Docker, the server uses in-memory storage — fine for local testing.
 | Error | Fix |
 |-------|-----|
 | `Could not read package.json` in `C:\Users\owenk\` | Run `cd C:\Users\owenk\Projects\odoggle` first |
+| `npm.ps1 cannot be loaded` / scripts disabled | Use **Command Prompt**, run `dev.cmd`, or `npm.cmd run dev` |
+| `ECONNREFUSED` on port 5432 | Remove `DATABASE_URL` from `apps/server/.env`, or install Docker and run `npm run db:up` |
 | `'Copy-Item' is not recognized` | You're in cmd, not PowerShell — use `copy` or `setup.cmd` |
 | `'docker' is not recognized` | Install Docker Desktop, or skip `db:up` (app works without it) |
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PdlBar } from "@/components/ui";
 import { computePdl, detectDogFace } from "@/lib/pdl";
 import { syncPdlToServer } from "@/lib/pdl-sync";
+import { appendPdlHistory } from "@/lib/pdl-history";
 import { usePlayer } from "@/lib/player-context";
 import type { PdlResult } from "@odoggle/shared";
 
@@ -58,6 +59,7 @@ export function LabScanner() {
     if (best) {
       setResult(best);
       setPdl(best);
+      appendPdlHistory(best);
       void syncPdlToServer(player.id, best);
       setPhase("done");
     } else {

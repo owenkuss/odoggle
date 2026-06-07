@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { StatCard } from "@/components/ui";
+import { apiUrl } from "@/lib/api";
 
 async function getStats() {
   try {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-    const res = await fetch(`${base}/api/stats`, { next: { revalidate: 30 } });
+    const res = await fetch(apiUrl("/api/stats"), { next: { revalidate: 30 } });
     return res.json();
   } catch {
     return { totalMatches: 0, activePlayers: 0, countries: 0, hoursPerDay: 0 };

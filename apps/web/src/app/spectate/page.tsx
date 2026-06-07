@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { JuryVotePanel, type MatchContestant } from "@/components/jury-vote-panel";
+import { type MatchContestant } from "@/components/jury-vote-panel";
+import { apiFetch } from "@/lib/api";
 import { useJury } from "@/lib/jury-context";
 
 interface VotingMatch {
@@ -18,14 +19,19 @@ export default function SpectatePage() {
   const { connectSpectator, activeDuty } = useJury();
   const [matches, setMatches] = useState<VotingMatch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [joining, setJoining] = useState<string | null>(null);
 
   const loadMatches = useCallback(async () => {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
     try {
-      const res = await fetch(`${base}/api/matches/voting`);
+      const res = await apiFetch("/api/matches/voting");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setMatches(data.matches ?? []);
+      setError(null);
+    } catch {
+      setError("Cannot reach the game server. Start it with dev.cmd from the project folder.");
+      setMatches([]);
     } finally {
       setLoading(false);
     }
@@ -56,9 +62,15 @@ export default function SpectatePage() {
         </div>
       )}
 
+      {error && (
+        <div className="mb-6 text-center bg-red-950/40 border border-red-900 rounded-xl p-4 text-red-300 text-sm">
+          {error}
+        </div>
+      )}
+
       {loading && <div className="text-center text-zinc-500">Loading active votes...</div>}
 
-      {!loading && matches.length === 0 && (
+      {!loading && !error && matches.length === 0 && (
         <div className="text-center bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-zinc-500">
           No matches awaiting votes right now.
           <Link href="/arena" className="block text-amber-400 mt-4 hover:underline">

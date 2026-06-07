@@ -5,33 +5,54 @@ const { Pool } = pg;
 
 let pool: pg.Pool | null = null;
 let ready = false;
+let dbAvailable = false;
 
 export function isDbEnabled(): boolean {
-  return Boolean(process.env.DATABASE_URL);
+  return dbAvailable;
 }
 
 export function getPool(): pg.Pool | null {
-  if (!isDbEnabled()) return null;
-  if (!pool) {
-    pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  }
+  if (!dbAvailable) return null;
   return pool;
 }
 
 export async function initDb(): Promise<boolean> {
-  const p = getPool();
-  if (!p) return false;
-  if (ready) return true;
-  await p.query(SCHEMA_SQL);
-  ready = true;
-  console.log("Postgres schema ready");
-  return true;
+  if (ready) return dbAvailable;
+
+  const url = process.env.DATABASE_URL?.trim();
+  if (!url) {
+    console.log("Postgres disabled (no DATABASE_URL) — using in-memory storage");
+    ready = true;
+    return false;
+  }
+
+  const candidate = new Pool({ connectionString: url });
+  try {
+    await candidate.query(SCHEMA_SQL);
+    pool = candidate;
+    dbAvailable = true;
+    ready = true;
+    console.log("Postgres schema ready");
+    return true;
+  } catch (err) {
+    await candidate.end().catch(() => {});
+    pool = null;
+    dbAvailable = false;
+    ready = true;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(
+      `Postgres unavailable (${msg}) — using in-memory storage. ` +
+        "Install Docker and run npm run db:up, or remove DATABASE_URL from apps/server/.env"
+    );
+    return false;
+  }
 }
 
 export async function closeDb(): Promise<void> {
   if (pool) {
     await pool.end();
     pool = null;
-    ready = false;
   }
+  dbAvailable = false;
+  ready = false;
 }

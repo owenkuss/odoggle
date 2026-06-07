@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { usePlayer } from "@/lib/player-context";
+import { apiFetch } from "@/lib/api";
 
 export function ProfileBar() {
   const { data: session } = useSession();
@@ -15,8 +16,7 @@ export function ProfileBar() {
     const displayName = session.user.name ?? session.user.email ?? "Player";
 
     async function merge() {
-      const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-      const res = await fetch(`${base}/api/player/merge`, {
+      const res = await apiFetch("/api/player/merge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

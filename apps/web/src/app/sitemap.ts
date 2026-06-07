@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { BLOG_POSTS } from "@/lib/blog-posts";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = process.env.NEXT_PUBLIC_URL ?? "https://odoggle.com";
@@ -16,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/blog",
     "/terms",
     "/privacy",
+    ...BLOG_POSTS.map((p) => `/blog/${p.slug}`),
   ];
   return routes.map((path) => ({
     url: `${base}${path}`,

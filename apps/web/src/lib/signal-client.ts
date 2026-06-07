@@ -82,8 +82,8 @@ export class SignalClient {
     this.send({ type: "spectate", matchId });
   }
 
-  skip(): void {
-    this.send({ type: "skip" });
+  skip(matchId?: string): void {
+    this.send({ type: "skip", ...(matchId ? { matchId } : {}) });
   }
 
   disconnect(): void {

@@ -1,7 +1,8 @@
+import { apiUrl } from "@/lib/api";
+
 async function getLeaderboard() {
   try {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-    const res = await fetch(`${base}/api/leaderboard`, { next: { revalidate: 60 } });
+    const res = await fetch(apiUrl("/api/leaderboard"), { next: { revalidate: 60 } });
     const data = await res.json();
     return data.entries ?? [];
   } catch {
