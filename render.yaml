@@ -1,6 +1,5 @@
 # render.yaml — free-tier API + WebSocket host
 # Deploy: https://dashboard.render.com → New → Blueprint → connect owenkuss/odoggle
-# Custom domain: api.odoggle.com → CNAME to your *.onrender.com URL
 
 services:
   - type: web
@@ -12,12 +11,14 @@ services:
     startCommand: npm run start -w @odoggle/server
     healthCheckPath: /health
     envVars:
+      - key: NODE_VERSION
+        value: "22"
       - key: NODE_ENV
         value: production
       - key: DEV_JURY
         value: "true"
       - key: WEB_ORIGIN
-        sync: false
+        value: https://odoggle.com
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL

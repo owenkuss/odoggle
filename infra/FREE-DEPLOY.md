@@ -86,19 +86,23 @@ Helps private rooms + rate limits. Skip if you want zero setup — in-memory sti
 
 ## 5. Porkbun DNS for odoggle.com
 
+**If deploy “doesn’t work”, DNS is usually the cause.**  
+Run `scripts\check-deploy.cmd` — if you see `uixie.porkbun.com`, fix DNS first.
+
+**Full fix guide:** [infra/PORKBUN-DNS.md](PORKBUN-DNS.md)
+
 Porkbun → **Domain Management → odoggle.com → DNS**
 
-Delete conflicting old records, then add:
+1. **Delete** all parking records (`uixie.porkbun.com`, URL forwarding, default ALIAS).
+2. Add:
 
 | Type | Host | Value |
 |------|------|-------|
-| **A** | `@` *(blank)* | `76.76.21.21` |
+| **A** | `@` *(blank)* | `76.76.21.21` *(confirm in Vercel Domains)* |
 | **CNAME** | `www` | `cname.vercel-dns.com` |
-| **CNAME** | `api` | `odoggle-api.onrender.com` *(or Render’s exact target)* |
+| **CNAME** | `api` | `odoggle-api.onrender.com` *(Render custom domain target)* |
 
-**Note:** Confirm the **A record** in Vercel → Domains (some projects show different IPs — use Vercel’s values if they differ).
-
-Wait 5–30 minutes for DNS + SSL.
+3. Wait 5–30 minutes, then run `scripts\check-deploy.cmd`.
 
 ---
 
