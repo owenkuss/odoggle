@@ -24,24 +24,28 @@ Manual: Camera check → Lab → Arena (two tabs) → `/spectate` vote.
 
 ## 1. Push code to GitHub
 
+Done — https://github.com/owenkuss/odoggle (CI green on `main`).
+
+To push future changes:
+
 ```cmd
 cd C:\Users\owenk\Projects\odoggle
-scripts\launch-all.cmd
+git push origin main
 ```
-
-Or step-by-step:
-
-```cmd
-git add -A
-git commit -m "your message"
-scripts\setup-github.cmd
-```
-
-Repo: https://github.com/owenkuss/odoggle
-
-**Never paste tokens in chat.**
 
 ---
+
+## 1b. Fast deploy scripts (Windows)
+
+Run in **Command Prompt** after completing local smoke test:
+
+| Script | Purpose |
+|--------|---------|
+| `scripts\deploy-fly.cmd` | Fly login → create app → set secrets → deploy |
+| `scripts\deploy-vercel.cmd` | Opens Vercel import + prints env vars |
+| `scripts\setup-github-deploy.cmd` | Fly token → GitHub `FLY_API_TOKEN` secret for Actions |
+
+Then trigger **Actions → Deploy** on GitHub for server redeploys.
 
 ## 2. Neon Postgres **YOU**
 

@@ -63,5 +63,5 @@ echo   4. Set NEXT_PUBLIC_API_URL to your Fly URL
 echo.
 
 echo Full checklist: LAUNCH.md
-echo Secrets template: infra/env.production.web.example + infra/env.production.server.example
+echo Quick deploy:  scripts\deploy-fly.cmd  then  scripts\deploy-vercel.cmd
 echo.

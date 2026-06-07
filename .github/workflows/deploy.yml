@@ -6,19 +6,21 @@ on:
 jobs:
   fly-server:
     runs-on: ubuntu-latest
-    if: vars.FLY_API_TOKEN != ''
     steps:
       - uses: actions/checkout@v4
+
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - name: Deploy server
-        run: flyctl deploy --config infra/fly.toml --dockerfile infra/Dockerfile
+
+      - name: Deploy server to Fly.io
+        run: flyctl deploy --config infra/fly.toml --dockerfile infra/Dockerfile --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
   vercel-hint:
     runs-on: ubuntu-latest
     steps:
-      - name: Vercel deploy note
+      - name: Vercel note
         run: |
-          echo "Connect this repo to Vercel with root directory apps/web."
-          echo "Set env vars from infra/env.production.web.example"
+          echo "Web deploys via Vercel Git integration."
+          echo "Import owenkuss/odoggle with root directory apps/web."
+          echo "Env: infra/env.production.web.example"
