@@ -36,18 +36,21 @@ echo.
 
 :deploy
 echo [3/4] Fly.io server
+set "FLYCTL=%LOCALAPPDATA%\Microsoft\WinGet\Packages\Fly-io.flyctl_Microsoft.Winget.Source_8wekyb3d8bbwe\flyctl.exe"
+if not exist "%FLYCTL%" set "FLYCTL=fly"
 where fly >nul 2>&1
-if errorlevel 1 (
+if errorlevel 1 if not exist "%FLYCTL%" (
   echo   flyctl not installed. Run: winget install Fly-io.flyctl
   echo   Then: fly auth login
 ) else (
-  fly auth whoami >nul 2>&1
+  if exist "%FLYCTL%" set "FLY= %FLYCTL%" else set "FLY=fly"
+  %FLY% auth whoami >nul 2>&1
   if errorlevel 1 (
-    echo   Not logged in. Run: fly auth login
+    echo   Not logged in. Run: %FLY% auth login
   ) else (
     echo   Logged in. Deploy with:
-    echo   fly secrets set WEB_ORIGIN=https://YOUR-VERCEL-URL DATABASE_URL=... REDIS_URL=...
-    echo   fly deploy --config infra/fly.toml --dockerfile infra/Dockerfile
+    echo   %FLY% secrets set WEB_ORIGIN=https://YOUR-VERCEL-URL --app odoggle-server
+    echo   %FLY% deploy --config infra/fly.toml --dockerfile infra/Dockerfile
   )
 )
 echo.

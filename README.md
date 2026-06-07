@@ -70,6 +70,10 @@ npm run ml:train     # train + export ONNX
 
 ## Production
 
-See [infra/DEPLOY.md](infra/DEPLOY.md) for Vercel + Fly.io + Neon + Upstash + TURN setup.
+See [LAUNCH.md](LAUNCH.md) for the full checklist (Neon, Upstash, Vercel, Fly, OAuth, TURN).
 
-You provide: OAuth keys, payment keys, TURN credentials, domain DNS, GPU time for model training.
+One command after setup:
+
+```cmd
+scripts\launch-all.cmd
+```
