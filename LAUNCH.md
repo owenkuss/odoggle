@@ -1,5 +1,8 @@
 # Odoggle launch checklist
 
+> **Want $0/month hosting?** Only pay for your domain → **[infra/FREE-DEPLOY.md](infra/FREE-DEPLOY.md)**  
+> Run `scripts\deploy-free.cmd` to open Vercel + Render + Neon + print Porkbun DNS.
+
 Complete steps in order. Items marked **YOU** need your accounts/keys.
 
 ---

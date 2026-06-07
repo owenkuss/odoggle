@@ -70,10 +70,10 @@ npm run ml:train     # train + export ONNX
 
 ## Production
 
-See [LAUNCH.md](LAUNCH.md) for the full checklist (Neon, Upstash, Vercel, Fly, OAuth, TURN).
+**Free ($0/month + domain):** [infra/FREE-DEPLOY.md](infra/FREE-DEPLOY.md) — Vercel + Render + Neon + Porkbun DNS.
 
-One command after setup:
+**Paid / scale:** [infra/DEPLOY.md](infra/DEPLOY.md) — Fly.io, TURN, Stripe.
 
 ```cmd
-scripts\launch-all.cmd
+scripts\deploy-free.cmd
 ```
