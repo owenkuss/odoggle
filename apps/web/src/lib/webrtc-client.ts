@@ -13,7 +13,11 @@ export class WebRTCClient {
   private videoMuted = false;
 
   constructor(private callbacks: WebRTCCallbacks) {
-    const iceServers: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
+    const iceServers: RTCIceServer[] = [
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun1.l.google.com:19302" },
+      { urls: "stun:stun2.l.google.com:19302" },
+    ];
     const turnUrl = process.env.NEXT_PUBLIC_TURN_URL;
     const turnUser = process.env.NEXT_PUBLIC_TURN_USERNAME;
     const turnCred = process.env.NEXT_PUBLIC_TURN_CREDENTIAL;
@@ -45,12 +49,22 @@ export class WebRTCClient {
     }
   }
 
-  async startLocalVideo(): Promise<MediaStream> {
-    this.localStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: false,
-    });
+  async startLocalVideo(existingStream?: MediaStream): Promise<MediaStream> {
+    this.localStream =
+      existingStream ??
+      (await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      }));
     this.localStream.getTracks().forEach((t) => this.pc.addTrack(t, this.localStream!));
+    return this.localStream;
+  }
+
+  getLocalStream(): MediaStream | null {
     return this.localStream;
   }
 

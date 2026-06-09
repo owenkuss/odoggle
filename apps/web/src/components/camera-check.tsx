@@ -5,26 +5,28 @@ import { computePdl, detectDogFace, getFrameBrightness, validateCameraFrame } fr
 import type { PdlResult } from "@odoggle/shared";
 
 interface CameraCheckProps {
-  onPass: (pdl: PdlResult) => void;
+  onPass: (pdl: PdlResult, stream: MediaStream) => void;
   continueLabel?: string;
 }
 
 export function CameraCheck({ onPass, continueLabel = "Continue →" }: CameraCheckProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const keepStreamRef = useRef(false);
   const [status, setStatus] = useState("Starting camera...");
   const [passed, setPassed] = useState(false);
   const [pdlResult, setPdlResult] = useState<PdlResult | null>(null);
 
   useEffect(() => {
-    let stream: MediaStream;
     let interval: ReturnType<typeof setInterval>;
 
     async function start() {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
           audio: false,
         });
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
@@ -57,20 +59,26 @@ export function CameraCheck({ onPass, continueLabel = "Continue →" }: CameraCh
       }
     }
 
-    start();
+    void start();
     return () => {
       clearInterval(interval);
-      stream?.getTracks().forEach((t) => t.stop());
+      if (!keepStreamRef.current) {
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+      }
+      streamRef.current = null;
     };
   }, []);
 
   return (
     <div className="max-w-lg mx-auto">
-      <video ref={videoRef} className="w-full rounded-xl bg-black aspect-video" muted playsInline />
+      <video ref={videoRef} className="w-full rounded-xl bg-black aspect-video" muted playsInline autoPlay />
       <p className={`mt-4 text-center ${passed ? "text-green-400" : "text-zinc-400"}`}>{status}</p>
-      {passed && pdlResult && (
+      {passed && pdlResult && streamRef.current && (
         <button
-          onClick={() => onPass(pdlResult)}
+          onClick={() => {
+            keepStreamRef.current = true;
+            onPass(pdlResult, streamRef.current!);
+          }}
           className="mt-4 w-full bg-amber-500 hover:bg-amber-400 text-black font-semibold py-3 rounded-lg"
         >
           {continueLabel}

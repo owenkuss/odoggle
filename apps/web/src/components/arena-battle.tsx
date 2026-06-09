@@ -8,6 +8,7 @@ import { CameraCheck } from "@/components/camera-check";
 import { ReportButton } from "@/components/report-button";
 import { usePlayer } from "@/lib/player-context";
 import { syncPdlToServer } from "@/lib/pdl-sync";
+import { attachVideoStream } from "@/lib/attach-video-stream";
 import { SignalClient } from "@/lib/signal-client";
 import { WebRTCClient } from "@/lib/webrtc-client";
 
@@ -24,6 +25,9 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
   const opponentIdRef = useRef<string | null>(null);
   const matchIdRef = useRef<string | null>(null);
   const isPlayer1Ref = useRef(false);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
+  const battleStartedRef = useRef(false);
 
   const [phase, setPhase] = useState<
     "camera_check" | "queued" | "waiting_room" | "matched" | "battle" | "result"
@@ -74,7 +78,13 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
     return () => clearInterval(iv);
   }, [phase, roomCode]);
 
-  const enterArena = useCallback(async (arenaPdl: PdlResult) => {
+  useEffect(() => {
+    if (phase !== "matched" && phase !== "battle") return;
+    attachVideoStream(localVideoRef.current, localStreamRef.current);
+    attachVideoStream(remoteVideoRef.current, remoteStreamRef.current);
+  }, [phase, matchId]);
+
+  const enterArena = useCallback(async (arenaPdl: PdlResult, cameraStream: MediaStream) => {
     setServerError(null);
     setPhase(roomCode ? "waiting_room" : "queued");
 
@@ -92,7 +102,8 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
 
     const webrtc = new WebRTCClient({
       onRemoteStream: (stream) => {
-        if (remoteVideoRef.current) remoteVideoRef.current.srcObject = stream;
+        remoteStreamRef.current = stream;
+        attachVideoStream(remoteVideoRef.current, stream);
       },
       onSignal: (payload) => {
         const opp = opponentIdRef.current;
@@ -100,14 +111,20 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
       },
       onConnectionState: (state) => {
         setConnectionState(state);
-        if (state === "connected" && matchIdRef.current) {
+        if (state === "connected" && matchIdRef.current && !battleStartedRef.current) {
+          battleStartedRef.current = true;
           signal.battleReady(matchIdRef.current);
         }
       },
     });
     webrtcRef.current = webrtc;
-    const local = await webrtc.startLocalVideo();
-    if (localVideoRef.current) localVideoRef.current.srcObject = local;
+    const local = await webrtc.startLocalVideo(cameraStream);
+    localStreamRef.current = local;
+
+    const sendOffer = async (oppId: string) => {
+      const offer = await webrtc.createOffer();
+      signal.relaySignal(oppId, { offer });
+    };
 
     signal.onMessage(async (msg) => {
       if (msg.type === "error") {
@@ -138,9 +155,21 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
         setPhase("matched");
 
         if (player.id < opp.id) {
-          const offer = await webrtc.createOffer();
-          signal.relaySignal(opp.id, { offer });
+          await sendOffer(opp.id);
+          window.setTimeout(() => {
+            if (opponentIdRef.current === opp.id && matchIdRef.current === mid) {
+              void sendOffer(opp.id);
+            }
+          }, 4000);
         }
+
+        window.setTimeout(() => {
+          const mid = matchIdRef.current;
+          if (mid && !battleStartedRef.current) {
+            battleStartedRef.current = true;
+            signal.battleReady(mid);
+          }
+        }, 6000);
       }
 
       if (msg.type === "signal" && msg.payload) {
@@ -153,6 +182,7 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
       }
       if (msg.type === "match_cancelled") {
         cleanup();
+        battleStartedRef.current = false;
         setPhase("camera_check");
         setConnectionState("");
         setMatchId(null);
@@ -203,10 +233,10 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
   }, [player, roomCode, opponentName, updateElo, recordWin, recordLoss, cleanup]);
 
   const handleCameraPass = useCallback(
-    (arenaPdl: PdlResult) => {
+    (arenaPdl: PdlResult, cameraStream: MediaStream) => {
       setPdl(arenaPdl);
       if (player.isPro) void syncPdlToServer(player.id, arenaPdl);
-      void enterArena(arenaPdl);
+      void enterArena(arenaPdl, cameraStream);
     },
     [enterArena, player.id, player.isPro, setPdl]
   );
@@ -218,12 +248,15 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
     setPhase("camera_check");
     setMatchId(null);
     matchIdRef.current = null;
+    battleStartedRef.current = false;
     setConnectionState("");
     setResultText("");
     setEloDelta(0);
     setNewElo(null);
     setMyPdl(null);
     setOppPdl(null);
+    localStreamRef.current = null;
+    remoteStreamRef.current = null;
   }, [cleanup]);
 
   return (
@@ -282,6 +315,7 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
           {phase === "matched" && connectionState !== "connected" && (
             <div className="text-center text-sm text-zinc-500 mb-4">
               Connecting video... ({connectionState || "negotiating"})
+              <p className="text-xs text-zinc-600 mt-1">If video stays black after 10s, try Skip and re-queue.</p>
             </div>
           )}
           <div className="flex flex-col md:flex-row gap-4">
