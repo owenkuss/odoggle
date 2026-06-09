@@ -4,7 +4,7 @@ import express from "express";
 import { createServer } from "http";
 import Stripe from "stripe";
 import { WebSocketServer, WebSocket } from "ws";
-import { DEFAULT_ELO, generateGuestId, MIN_VOTES_REQUIRED, VOTE_EXTENSION_SEC } from "@odoggle/shared";
+import { DEFAULT_ELO, generateGuestId, type PdlResult } from "@odoggle/shared";
 import { getClientMeta, getOnlineCount, registerClient, send, unregisterClient } from "./clients";
 import { initDb } from "./db/pool";
 import { persistReport } from "./db/reports";
@@ -20,8 +20,6 @@ import {
 dotenv.config();
 
 const PORT = Number(process.env.PORT ?? 3001);
-const DEV_JURY = process.env.DEV_JURY !== "false";
-const voteTimers = new Map<string, ReturnType<typeof setTimeout>[]>();
 
 const app = express();
 const httpServer = createServer(app);
@@ -31,8 +29,9 @@ app.use(
   cors({
     origin(origin, callback) {
       if (!origin) return callback(null, true);
-      const allowed = process.env.WEB_ORIGIN ?? "http://localhost:3000";
-      if (origin === allowed) return callback(null, true);
+      const configured = process.env.WEB_ORIGIN ?? "http://localhost:3000";
+      const allowed = configured.split(",").map((o) => o.trim());
+      if (allowed.includes(origin)) return callback(null, true);
       if (process.env.NODE_ENV !== "production" && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
         return callback(null, true);
       }
@@ -139,16 +138,6 @@ app.get("/api/player/:id", async (req, res) => {
   res.json(player);
 });
 
-app.get("/api/matches/voting", (_req, res) => {
-  res.json({ matches: matchmaker.getVotingMatches() });
-});
-
-app.get("/api/matches/:id", (req, res) => {
-  const summary = matchmaker.getMatchSummary(req.params.id);
-  if (!summary) return res.status(404).json({ error: "Match not found or not voting" });
-  res.json(summary);
-});
-
 app.post("/api/player/pdl", async (req, res) => {
   const { playerId, pdl } = req.body;
   if (!playerId || !pdl) return res.status(400).json({ error: "playerId and pdl required" });
@@ -229,10 +218,17 @@ function iterateClients(): [WebSocket, NonNullable<ReturnType<typeof getClientMe
   return result;
 }
 
+function parseLastPdl(value: unknown): PdlResult | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const p = value as Record<string, unknown>;
+  if (typeof p.composite !== "number" || typeof p.scannedAt !== "number") return undefined;
+  return value as unknown as PdlResult;
+}
+
 function sendToMatch(matchId: string, message: unknown): void {
   const match = matchmaker.getMatch(matchId);
   if (!match) return;
-  const ids = new Set([match.player1.id, match.player2.id, ...match.spectators]);
+  const ids = new Set([match.player1.id, match.player2.id]);
   for (const [ws, meta] of iterateClients()) {
     if (ids.has(meta.playerId)) send(ws, message);
   }
@@ -253,80 +249,7 @@ function relaySignal(from: WebSocket, targetId: string, msg: Record<string, unkn
   }
 }
 
-function clearVoteTimers(matchId: string): void {
-  const timers = voteTimers.get(matchId);
-  if (timers) {
-    timers.forEach(clearTimeout);
-    voteTimers.delete(matchId);
-  }
-}
-
-function notifyJuryDuty(
-  matchId: string,
-  match: NonNullable<ReturnType<typeof matchmaker.getMatch>>,
-  juryIds: string[]
-): void {
-  const payload = {
-    type: "jury_duty",
-    matchId,
-    player1: {
-      id: match.player1.id,
-      displayName: match.player1.displayName,
-      elo: match.player1.elo,
-    },
-    player2: {
-      id: match.player2.id,
-      displayName: match.player2.displayName,
-      elo: match.player2.elo,
-    },
-    minVotes: MIN_VOTES_REQUIRED,
-  };
-  for (const juryId of juryIds) {
-    sendToPlayer(juryId, payload);
-  }
-}
-
-function broadcastVoteProgress(matchId: string, totalVotes: number): void {
-  sendToMatch(matchId, { type: "vote_recorded", matchId, totalVotes });
-}
-
-function scheduleVoting(matchId: string): void {
-  clearVoteTimers(matchId);
-  const timers: ReturnType<typeof setTimeout>[] = [];
-
-  timers.push(
-    setTimeout(() => {
-      const match = matchmaker.getMatch(matchId);
-      if (!match || match.phase !== "voting") return;
-      if (match.votes.size >= MIN_VOTES_REQUIRED) return;
-
-      matchmaker.extendVoting(matchId);
-      sendToMatch(matchId, {
-        type: "voting_extended",
-        matchId,
-        extraSeconds: VOTE_EXTENSION_SEC,
-      });
-
-      timers.push(
-        setTimeout(() => {
-          const current = matchmaker.getMatch(matchId);
-          if (!current || current.phase !== "voting") return;
-          if (current.votes.size >= MIN_VOTES_REQUIRED) return;
-
-          if (DEV_JURY) {
-            const resolved = matchmaker.injectJuryVotes(matchId);
-            if (resolved?.outcome) broadcastMatchResult(matchId, resolved);
-          }
-        }, VOTE_EXTENSION_SEC * 1000)
-      );
-    }, 10 * 1000)
-  );
-
-  voteTimers.set(matchId, timers);
-}
-
 function broadcastMatchResult(matchId: string, match: NonNullable<ReturnType<typeof matchmaker.getMatch>>): void {
-  clearVoteTimers(matchId);
   const outcome = match.outcome;
   if (!outcome) return;
 
@@ -340,25 +263,32 @@ function broadcastMatchResult(matchId: string, match: NonNullable<ReturnType<typ
     winnerEloDelta: outcome.winnerEloDelta,
     loserEloDelta: outcome.loserEloDelta,
     unranked: outcome.unranked,
-    votes: match.votes.size,
+    player1Pdl: outcome.player1Pdl,
+    player2Pdl: outcome.player2Pdl,
   });
 }
 
 setInterval(() => matchmaker.widenQueues(), 5000);
 setInterval(() => matchmaker.cleanupOldMatches(), 600_000);
 
+const wsQueues = new WeakMap<WebSocket, Promise<void>>();
+
 wss.on("connection", (ws) => {
   send(ws, { type: "connected", online: getOnlineCount() });
 
   ws.on("message", (raw) => {
-    void (async () => {
-      try {
-        const msg = JSON.parse(raw.toString()) as Record<string, unknown>;
-        await handleMessage(ws, msg);
-      } catch {
-        send(ws, { type: "error", message: "Invalid message" });
-      }
-    })();
+    const run = wsQueues.get(ws) ?? Promise.resolve();
+    const next = run
+      .then(async () => {
+        try {
+          const msg = JSON.parse(raw.toString()) as Record<string, unknown>;
+          await handleMessage(ws, msg);
+        } catch {
+          send(ws, { type: "error", message: "Invalid message" });
+        }
+      })
+      .catch(() => {});
+    wsQueues.set(ws, next);
   });
 
   ws.on("close", () => unregisterClient(ws));
@@ -373,6 +303,7 @@ async function handleMessage(ws: WebSocket, msg: Record<string, unknown>): Promi
       const isPro = Boolean(msg.isPro);
       registerClient(ws, { playerId, displayName, elo, isPro });
       const stored = (await loadPlayer(playerId)) ?? undefined;
+      const lastPdl = parseLastPdl(msg.lastPdl) ?? stored?.lastPdl;
       matchmaker.upsertPlayer({
         id: playerId,
         displayName: stored?.displayName ?? displayName,
@@ -382,7 +313,7 @@ async function handleMessage(ws: WebSocket, msg: Record<string, unknown>): Promi
         losses: stored?.losses,
         isPro: stored?.isPro ?? isPro,
         isGuest: stored?.isGuest ?? true,
-        lastPdl: stored?.lastPdl,
+        lastPdl,
       });
       const profile = matchmaker.getPlayer(playerId)!;
       send(ws, { type: "registered", playerId, elo: profile.elo, isPro: profile.isPro });
@@ -422,14 +353,14 @@ async function handleMessage(ws: WebSocket, msg: Record<string, unknown>): Promi
     }
     case "create_room": {
       const meta = getClientMeta(ws);
-      if (!meta) return;
+      if (!meta) return send(ws, { type: "error", message: "Not registered" });
       const room = matchmaker.createRoom(meta.playerId, Boolean(msg.unranked));
       send(ws, { type: "room_created", room });
       break;
     }
     case "join_room": {
       const meta = getClientMeta(ws);
-      if (!meta) return;
+      if (!meta) return send(ws, { type: "error", message: "Not registered" });
       const code = String(msg.code ?? "").toUpperCase();
       const room = await matchmaker.joinRoom(code, meta.playerId);
       if (!room) return send(ws, { type: "error", message: "Room not found or full" });
@@ -439,24 +370,36 @@ async function handleMessage(ws: WebSocket, msg: Record<string, unknown>): Promi
     }
     case "enter_room": {
       const meta = getClientMeta(ws);
-      if (!meta) return;
+      if (!meta) return send(ws, { type: "error", message: "Not registered" });
       const code = String(msg.code ?? "").toUpperCase();
       const profile = matchmaker.getPlayer(meta.playerId);
-      const match = await matchmaker.enterRoomArena(code, {
+      const result = await matchmaker.enterRoomArena(code, {
         id: meta.playerId,
         displayName: meta.displayName,
         elo: profile?.elo ?? meta.elo,
         socketId: meta.playerId,
         isPro: profile?.isPro ?? meta.isPro,
       });
-      if (match) {
-        sendToMatch(match.id, {
+      if (result.match) {
+        sendToMatch(result.match.id, {
           type: "match_found",
-          matchId: match.id,
-          player1: { id: match.player1.id, displayName: match.player1.displayName, elo: match.player1.elo },
-          player2: { id: match.player2.id, displayName: match.player2.displayName, elo: match.player2.elo },
+          matchId: result.match.id,
+          player1: {
+            id: result.match.player1.id,
+            displayName: result.match.player1.displayName,
+            elo: result.match.player1.elo,
+          },
+          player2: {
+            id: result.match.player2.id,
+            displayName: result.match.player2.displayName,
+            elo: result.match.player2.elo,
+          },
           roomCode: code,
         });
+      } else if (result.reason === "not_found") {
+        send(ws, { type: "room_error", code, reason: "not_found", message: "Room not found. Check the code or create a new room." });
+      } else if (result.reason === "full") {
+        send(ws, { type: "room_error", code, reason: "full", message: "Room is full." });
       } else {
         send(ws, { type: "room_waiting", code });
       }
@@ -473,51 +416,8 @@ async function handleMessage(ws: WebSocket, msg: Record<string, unknown>): Promi
     }
     case "battle_end": {
       const matchId = String(msg.matchId ?? "");
-      const match = matchmaker.beginVoting(matchId);
-      if (!match) return;
-      const jury = matchmaker.pullJuryFromQueue(matchId, 2);
-      sendToMatch(matchId, {
-        type: "voting_start",
-        matchId,
-        minVotes: MIN_VOTES_REQUIRED,
-        juryIds: jury,
-        player1: { id: match.player1.id, displayName: match.player1.displayName, elo: match.player1.elo },
-        player2: { id: match.player2.id, displayName: match.player2.displayName, elo: match.player2.elo },
-      });
-      notifyJuryDuty(matchId, match, jury);
-      scheduleVoting(matchId);
-      break;
-    }
-    case "vote": {
-      const matchId = String(msg.matchId ?? "");
-      const meta = getClientMeta(ws);
-      if (!meta) return;
-      const votedForId = String(msg.votedForId ?? "");
-      const match = matchmaker.castVote(matchId, meta.playerId, votedForId);
-      if (match?.phase === "done" && match.outcome) {
-        broadcastMatchResult(matchId, match);
-      } else if (match) {
-        broadcastVoteProgress(matchId, match.votes.size);
-      }
-      break;
-    }
-    case "spectate": {
-      const matchId = String(msg.matchId ?? "");
-      const meta = getClientMeta(ws);
-      if (!meta) return;
-      const match = matchmaker.getMatch(matchId);
-      if (!match || match.phase !== "voting") {
-        return send(ws, { type: "error", message: "Match not open for voting" });
-      }
-      matchmaker.addSpectator(matchId, meta.playerId);
-      send(ws, {
-        type: "spectating",
-        matchId,
-        player1: { id: match.player1.id, displayName: match.player1.displayName, elo: match.player1.elo },
-        player2: { id: match.player2.id, displayName: match.player2.displayName, elo: match.player2.elo },
-        minVotes: MIN_VOTES_REQUIRED,
-        totalVotes: match.votes.size,
-      });
+      const match = matchmaker.finishBattle(matchId);
+      if (match?.outcome) broadcastMatchResult(matchId, match);
       break;
     }
     case "skip": {
@@ -532,7 +432,6 @@ async function handleMessage(ws: WebSocket, msg: Record<string, unknown>): Promi
           (match.player1.id === meta.playerId || match.player2.id === meta.playerId)
         ) {
           matchmaker.cancelMatch(matchId);
-          clearVoteTimers(matchId);
           sendToMatch(matchId, { type: "match_cancelled", matchId, by: meta.playerId });
           return;
         }

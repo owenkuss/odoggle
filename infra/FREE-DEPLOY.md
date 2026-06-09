@@ -134,7 +134,6 @@ NEXT_PUBLIC_TURN_CREDENTIAL=
 - [ ] https://api.odoggle.com/health returns OK
 - [ ] Lab scan works
 - [ ] Arena queue (wake Render first if cold — wait ~60s after idle)
-- [ ] `/spectate` voting works
 
 Local smoke test before DNS:
 

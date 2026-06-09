@@ -38,7 +38,7 @@ export default function OpenGraphImage() {
             maxWidth: 900,
           }}
         >
-          1v1 dog face battles · On-device PDL · Live audience votes
+          1v1 dog face battles · On-device PDL · Climb the ELO ladder
         </div>
       </div>
     ),

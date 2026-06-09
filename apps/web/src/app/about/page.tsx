@@ -4,7 +4,7 @@ export default function AboutPage() {
       <h1>About Odoggle</h1>
       <p>
         Odoggle is a privacy-first 1v1 dog video face-off arena. Two strangers go head-to-head on live
-        webcam for 15 seconds, the audience votes, and an ELO score decides who climbs the global leaderboard.
+        webcam for 15 seconds, then the higher PDL rating wins and ELO decides who climbs the global leaderboard.
       </p>
       <p>
         Solo players can calibrate their on-device PDL score in The Lab — a private, browser-only

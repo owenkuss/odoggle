@@ -15,8 +15,7 @@ export function ProGate({ children }: { children: React.ReactNode }) {
       <h2 className="text-xl font-bold mb-3">The Lab requires Odoggle Pro</h2>
       <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
         PDL scans run on-device in The Lab — symmetry, harmony, muzzle, coat, and eye alertness.
-        Unlock with a one-time <strong className="text-white">lifetime</strong> upgrade. Arena and
-        voting stay free.
+        Unlock with a one-time <strong className="text-white">lifetime</strong> upgrade. Arena stays free.
       </p>
       <ul className="text-left text-sm text-zinc-500 space-y-2 mb-8 max-w-sm mx-auto">
         <li>✓ Unlimited Lab PDL scans</li>

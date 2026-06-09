@@ -10,7 +10,6 @@ const LINKS = [
   { href: "/lab", label: "The Lab", proOnly: true },
   { href: "/arena", label: "Arena" },
   { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/spectate", label: "Vote" },
   { href: "/room", label: "Rooms" },
   { href: "/profile", label: "Profile" },
   { href: "/pricing", label: "Pro" },

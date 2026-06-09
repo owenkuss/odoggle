@@ -52,6 +52,8 @@ export interface MatchOutcome {
   winnerElo: number;
   loserElo: number;
   unranked?: boolean;
+  player1Pdl?: number;
+  player2Pdl?: number;
 }
 
 export type ReportReason =
@@ -60,12 +62,6 @@ export type ReportReason =
   | "abuse"
   | "spam"
   | "other";
-
-export interface VotePayload {
-  matchId: string;
-  voterId: string;
-  votedForId: string;
-}
 
 export interface RoomInfo {
   code: string;

@@ -5,7 +5,10 @@ const nextConfig = {
     return config;
   },
   async redirects() {
-    return [{ source: "/camera-check", destination: "/arena", permanent: true }];
+    return [
+      { source: "/camera-check", destination: "/arena", permanent: true },
+      { source: "/spectate", destination: "/arena", permanent: true },
+    ];
   },
   async rewrites() {
     const target = process.env.API_PROXY_TARGET ?? "http://localhost:3001";

@@ -15,10 +15,8 @@ services:
         value: "22"
       - key: NODE_ENV
         value: production
-      - key: DEV_JURY
-        value: "true"
       - key: WEB_ORIGIN
-        value: https://odoggle.com
+        value: https://odoggle.com,https://www.odoggle.com
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL

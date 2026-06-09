@@ -67,7 +67,7 @@ export default async function HomePage() {
         <div className="grid md:grid-cols-3 gap-6">
           {[
             { step: "01", title: "Enter Arena", desc: "Free for everyone. Camera check on join, then ranked 1v1 matchmaking.", href: "/arena" },
-            { step: "02", title: "Bark Battle & Climb", desc: "Random 1v1. Audience votes in real time. Win streaks earn ELO.", href: "/arena" },
+            { step: "02", title: "Bark Battle & Climb", desc: "15-second face-off. Higher PDL wins when the timer ends. ELO updates.", href: "/arena" },
             { step: "03", title: "Pro: The Lab", desc: "Lifetime Pro unlocks on-device PDL scans — symmetry, harmony, muzzle, coat, eyes.", href: "/pricing" },
           ].map((s) => (
             <div key={s.step} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
@@ -84,7 +84,7 @@ export default async function HomePage() {
         <h2 className="text-xl font-bold mb-4">What is Odoggle?</h2>
         <p className="text-zinc-400 leading-relaxed">
           Odoggle is a live 1v1 dog face-off arena. Two strangers go camera-on for fifteen seconds,
-          the audience votes on who won the bark battle, and ELO is exchanged. Arena is free for everyone.
+          then the higher PDL rating wins and ELO is exchanged. Arena is free for everyone.
           Pro members unlock The Lab for on-device PDL scans — nothing uploaded. Win streaks climb the global ladder.
           Top 100 unlocks the Top Dog tier.
         </p>

@@ -2,8 +2,9 @@ import {
   applyMatchResult,
   DEFAULT_ELO,
   generateRoomCode,
+  getEffectivePdlScore,
   MATCHMAKING_BUCKETS,
-  MIN_VOTES_REQUIRED,
+  resolveWinnerByPdl,
   TOP_DOG_RANK,
 } from "@odoggle/shared";
 import type { MatchOutcome, PlayerProfile, RoomInfo } from "@odoggle/shared";
@@ -32,12 +33,8 @@ export interface ActiveMatch {
   id: string;
   player1: QueuedPlayer;
   player2: QueuedPlayer;
-  spectators: string[];
-  votes: Map<string, string>;
-  phase: "connecting" | "battle" | "voting" | "done";
+  phase: "connecting" | "battle" | "done";
   startedAt?: number;
-  votingStartedAt?: number;
-  voteExtended?: boolean;
   roomCode?: string;
   unranked?: boolean;
   outcome?: MatchOutcome;
@@ -144,8 +141,6 @@ export class Matchmaker {
       id: uuidv4(),
       player1: p1,
       player2: p2,
-      spectators: [],
-      votes: new Map(),
       phase: "connecting",
       roomCode,
       unranked,
@@ -158,67 +153,6 @@ export class Matchmaker {
     return this.matches.get(matchId);
   }
 
-  addSpectator(matchId: string, socketId: string): void {
-    const match = this.matches.get(matchId);
-    if (match && !match.spectators.includes(socketId)) {
-      match.spectators.push(socketId);
-    }
-  }
-
-  pullJuryFromQueue(matchId: string, count = 2): string[] {
-    const match = this.matches.get(matchId);
-    if (!match) return [];
-    const jury: string[] = [];
-    const blocked = new Set([match.player1.id, match.player2.id]);
-    const toRemove: string[] = [];
-    for (let i = 0; i < this.queue.length && jury.length < count; i++) {
-      const candidate = this.queue[i];
-      if (!blocked.has(candidate.id)) {
-        jury.push(candidate.id);
-        toRemove.push(candidate.id);
-        if (!match.spectators.includes(candidate.id)) {
-          match.spectators.push(candidate.id);
-        }
-      }
-    }
-    for (const id of toRemove) this.leaveQueue(id);
-    return jury;
-  }
-
-  getVotingMatches() {
-    return [...this.matches.values()]
-      .filter((m) => m.phase === "voting")
-      .map((m) => ({
-        matchId: m.id,
-        player1: {
-          id: m.player1.id,
-          displayName: m.player1.displayName,
-          elo: m.player1.elo,
-        },
-        player2: {
-          id: m.player2.id,
-          displayName: m.player2.displayName,
-          elo: m.player2.elo,
-        },
-        votes: m.votes.size,
-        minVotes: MIN_VOTES_REQUIRED,
-        unranked: m.unranked ?? false,
-      }));
-  }
-
-  getMatchSummary(matchId: string) {
-    const m = this.matches.get(matchId);
-    if (!m || m.phase !== "voting") return null;
-    return {
-      matchId: m.id,
-      player1: { id: m.player1.id, displayName: m.player1.displayName, elo: m.player1.elo },
-      player2: { id: m.player2.id, displayName: m.player2.displayName, elo: m.player2.elo },
-      votes: m.votes.size,
-      minVotes: MIN_VOTES_REQUIRED,
-      phase: m.phase,
-    };
-  }
-
   startBattle(matchId: string): ActiveMatch | undefined {
     const match = this.matches.get(matchId);
     if (!match || match.phase !== "connecting") return undefined;
@@ -227,73 +161,20 @@ export class Matchmaker {
     return match;
   }
 
-  beginVoting(matchId: string): ActiveMatch | undefined {
+  finishBattle(matchId: string): ActiveMatch | null {
     const match = this.matches.get(matchId);
-    if (!match || match.phase !== "battle") return undefined;
-    match.phase = "voting";
-    match.votingStartedAt = Date.now();
-    match.voteExtended = false;
-    return match;
-  }
+    if (!match || match.phase !== "battle") return null;
 
-  extendVoting(matchId: string): ActiveMatch | undefined {
-    const match = this.matches.get(matchId);
-    if (!match || match.phase !== "voting" || match.voteExtended) return undefined;
-    match.voteExtended = true;
-    return match;
-  }
-
-  castVote(matchId: string, voterId: string, votedForId: string): ActiveMatch | null {
-    const match = this.matches.get(matchId);
-    if (!match || match.phase !== "voting") return null;
-    if (voterId === match.player1.id || voterId === match.player2.id) return null;
-    if (votedForId !== match.player1.id && votedForId !== match.player2.id) return null;
-    match.votes.set(voterId, votedForId);
-    if (match.votes.size >= MIN_VOTES_REQUIRED) {
-      return this.resolveMatch(matchId);
-    }
-    return match;
-  }
-
-  injectJuryVotes(matchId: string): ActiveMatch | null {
-    const match = this.matches.get(matchId);
-    if (!match || match.phase !== "voting") return null;
-    const juryIds = ["jury_a", "jury_b", "jury_c"];
-    for (const juryId of juryIds) {
-      if (match.votes.size >= MIN_VOTES_REQUIRED) break;
-      if (match.votes.has(juryId)) continue;
-      const voteFor = Math.random() > 0.5 ? match.player1.id : match.player2.id;
-      match.votes.set(juryId, voteFor);
-    }
-    if (match.votes.size >= MIN_VOTES_REQUIRED) {
-      return this.resolveMatch(matchId);
-    }
-    return match;
-  }
-
-  resolveMatch(matchId: string): ActiveMatch | null {
-    const match = this.matches.get(matchId);
-    if (!match) return null;
-
-    const voteCounts = new Map<string, number>();
-    for (const votedFor of match.votes.values()) {
-      voteCounts.set(votedFor, (voteCounts.get(votedFor) ?? 0) + 1);
-    }
-
-    let winnerId = match.player1.id;
-    let loserId = match.player2.id;
-    const p1Votes = voteCounts.get(match.player1.id) ?? 0;
-    const p2Votes = voteCounts.get(match.player2.id) ?? 0;
-
-    if (p2Votes > p1Votes) {
-      winnerId = match.player2.id;
-      loserId = match.player1.id;
-    } else if (p1Votes === p2Votes && match.votes.size > 0) {
-      if (match.player2.elo > match.player1.elo) {
-        winnerId = match.player1.id;
-        loserId = match.player2.id;
-      }
-    }
+    const p1Profile = this.players.get(match.player1.id);
+    const p2Profile = this.players.get(match.player2.id);
+    const player1Pdl = getEffectivePdlScore(p1Profile?.lastPdl);
+    const player2Pdl = getEffectivePdlScore(p2Profile?.lastPdl);
+    const { winnerId, loserId } = resolveWinnerByPdl(
+      match.player1.id,
+      match.player2.id,
+      player1Pdl,
+      player2Pdl
+    );
 
     let outcome: MatchOutcome = {
       matchId,
@@ -304,11 +185,17 @@ export class Matchmaker {
       winnerElo: match.player1.elo,
       loserElo: match.player2.elo,
       unranked: match.unranked,
+      player1Pdl,
+      player2Pdl,
     };
 
     if (!match.unranked) {
-      const winner = this.players.get(winnerId) ?? this.upsertPlayer({ id: winnerId, displayName: "Player", elo: DEFAULT_ELO });
-      const loser = this.players.get(loserId) ?? this.upsertPlayer({ id: loserId, displayName: "Player", elo: DEFAULT_ELO });
+      const winner =
+        this.players.get(winnerId) ??
+        this.upsertPlayer({ id: winnerId, displayName: "Player", elo: DEFAULT_ELO });
+      const loser =
+        this.players.get(loserId) ??
+        this.upsertPlayer({ id: loserId, displayName: "Player", elo: DEFAULT_ELO });
       const result = applyMatchResult(winner.elo, loser.elo);
       winner.elo = result.winnerNew;
       winner.peakElo = Math.max(winner.peakElo, winner.elo);
@@ -326,6 +213,8 @@ export class Matchmaker {
         winnerElo: winner.elo,
         loserElo: loser.elo,
         unranked: false,
+        player1Pdl,
+        player2Pdl,
       };
     }
 
@@ -336,7 +225,7 @@ export class Matchmaker {
       cachePlayer(this.players.get(winnerId)!);
       cachePlayer(this.players.get(loserId)!);
     }
-    void persistMatchOutcome(outcome, match.votes.size);
+    void persistMatchOutcome(outcome, 0);
     return match;
   }
 
@@ -380,10 +269,21 @@ export class Matchmaker {
   async enterRoomArena(
     code: string,
     player: Omit<QueuedPlayer, "joinedAt" | "bucketIndex">
-  ): Promise<ActiveMatch | null> {
+  ): Promise<{ match: ActiveMatch | null; reason: "not_found" | "full" | "waiting" | "matched" }> {
     const room = await this.loadRoom(code);
-    if (!room) return null;
-    if (player.id !== room.hostId && player.id !== room.guestId) return null;
+    if (!room) return { match: null, reason: "not_found" };
+
+    if (player.id === room.hostId) {
+      // host entering arena
+    } else if (player.id === room.guestId) {
+      // guest already joined via /room or prior enter
+    } else if (!room.guestId) {
+      room.guestId = player.id;
+      this.rooms.set(room.code, room);
+      void redisSaveRoom(room);
+    } else {
+      return { match: null, reason: "full" };
+    }
 
     const upper = room.code;
     if (!this.roomPresence.has(upper)) this.roomPresence.set(upper, new Set());
@@ -397,7 +297,7 @@ export class Matchmaker {
     }
 
     if (!room.guestId || !present.has(room.hostId) || !present.has(room.guestId)) {
-      return null;
+      return { match: null, reason: "waiting" };
     }
 
     const hostProfile = this.players.get(room.hostId);
@@ -419,7 +319,7 @@ export class Matchmaker {
 
     this.roomPresence.delete(upper);
     void redisClearRoomPresence(upper);
-    return this.createMatch(p1, p2, upper, room.unranked);
+    return { match: this.createMatch(p1, p2, upper, room.unranked), reason: "matched" };
   }
 
   leaveRoomArena(code: string, playerId: string): void {

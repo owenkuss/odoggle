@@ -106,7 +106,7 @@ Upload `apps/web/public/models/*.onnx` to R2/Blob, update manifest URLs or keep 
 
 - [ ] Lab scan + Arena camera check on join (mobile)
 - [ ] Two-browser arena match end-to-end
-- [ ] Audience vote via `/spectate` resolves ELO
+- [ ] Two-browser arena match end-to-end (battle timer → ELO result)
 - [ ] Private room 4-letter code flow
 - [ ] Leaderboard persists after server restart
 - [ ] Google profile merge works

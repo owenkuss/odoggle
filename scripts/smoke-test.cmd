@@ -21,13 +21,13 @@ if errorlevel 1 (
 )
 echo OK: stats API
 
-echo Testing %API%/api/matches/voting ...
-curl -sf %API%/api/matches/voting >nul 2>&1
+echo Testing %API%/api/leaderboard ...
+curl -sf %API%/api/leaderboard >nul 2>&1
 if errorlevel 1 (
-  echo FAIL: /api/matches/voting
+  echo FAIL: /api/leaderboard
   exit /b 1
 )
-echo OK: spectate API
+echo OK: leaderboard API
 
 echo Testing %WEB% ...
 curl -sf %WEB% >nul 2>&1
@@ -38,4 +38,4 @@ if errorlevel 1 (
 )
 
 echo.
-echo Smoke test passed. Manual: Lab scan, Arena match, /spectate vote.
+echo Smoke test passed. Manual: Lab scan, Arena match, ELO result.

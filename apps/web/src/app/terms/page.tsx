@@ -5,7 +5,7 @@ export default function TermsPage() {
       <p>By using Odoggle you agree to these terms. Odoggle is provided as-is for entertainment purposes.</p>
       <p>You must be the pet owner or have permission to film any dog shown on camera. Do not film strangers&apos; pets without consent.</p>
       <p>You may not use Odoggle for harassment, abuse, or illegal content. We may terminate access for violations.</p>
-      <p>PDL scores are advisory and computed on-device. ELO rankings reflect match outcomes only.</p>
+      <p>PDL scores are computed on-device. Match winners are decided by PDL; ELO rankings reflect those outcomes.</p>
       <p>Odoggle Pro purchases are subject to our Refund Policy.</p>
     </article>
   );

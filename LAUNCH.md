@@ -21,7 +21,7 @@ In another terminal:
 scripts\smoke-test.cmd
 ```
 
-Manual: Lab scan → Arena (camera check on join) → `/spectate` vote.
+Manual: Lab scan → Arena (camera check on join) → bark battle → ELO result.
 
 ---
 
@@ -175,7 +175,7 @@ Update env URLs to production domain.
 - [ ] Home page loads on Vercel
 - [ ] Lab scan on mobile
 - [ ] Two-browser arena match + video
-- [ ] `/spectate` vote resolves ELO
+- [ ] Two-browser arena match end-to-end (battle timer → ELO result)
 - [ ] Private room code
 - [ ] Leaderboard persists after Fly restart (needs Neon)
 - [ ] Google sign-in merges profile

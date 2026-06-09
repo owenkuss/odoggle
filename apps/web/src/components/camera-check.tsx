@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { detectDogFace, getFrameBrightness, validateCameraFrame } from "@/lib/pdl";
+import { computePdl, detectDogFace, getFrameBrightness, validateCameraFrame } from "@/lib/pdl";
+import type { PdlResult } from "@odoggle/shared";
 
 interface CameraCheckProps {
-  onPass: () => void;
+  onPass: (pdl: PdlResult) => void;
   continueLabel?: string;
 }
 
@@ -12,6 +13,7 @@ export function CameraCheck({ onPass, continueLabel = "Continue →" }: CameraCh
   const videoRef = useRef<HTMLVideoElement>(null);
   const [status, setStatus] = useState("Starting camera...");
   const [passed, setPassed] = useState(false);
+  const [pdlResult, setPdlResult] = useState<PdlResult | null>(null);
 
   useEffect(() => {
     let stream: MediaStream;
@@ -34,8 +36,16 @@ export function CameraCheck({ onPass, continueLabel = "Continue →" }: CameraCh
           const brightness = getFrameBrightness(video);
           const detection = await detectDogFace(video);
           const result = validateCameraFrame(detection, brightness);
-          if (result.ok) {
-            setStatus("Camera check passed!");
+          if (result.ok && detection) {
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext("2d")!;
+            ctx.drawImage(video, 0, 0);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pdl = computePdl(detection, imageData);
+            setPdlResult(pdl);
+            setStatus(`Camera check passed · PDL ${pdl.composite}`);
             setPassed(true);
             clearInterval(interval);
           } else {
@@ -58,9 +68,9 @@ export function CameraCheck({ onPass, continueLabel = "Continue →" }: CameraCh
     <div className="max-w-lg mx-auto">
       <video ref={videoRef} className="w-full rounded-xl bg-black aspect-video" muted playsInline />
       <p className={`mt-4 text-center ${passed ? "text-green-400" : "text-zinc-400"}`}>{status}</p>
-      {passed && (
+      {passed && pdlResult && (
         <button
-          onClick={onPass}
+          onClick={() => onPass(pdlResult)}
           className="mt-4 w-full bg-amber-500 hover:bg-amber-400 text-black font-semibold py-3 rounded-lg"
         >
           {continueLabel}

@@ -1,6 +1,13 @@
 "use client";
 
+import type { PdlResult } from "@odoggle/shared";
+import { getSignalUrl, wakeServer } from "@/lib/api";
+
 type MessageHandler = (msg: Record<string, unknown>) => void;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export class SignalClient {
   private ws: WebSocket | null = null;
@@ -8,14 +15,39 @@ export class SignalClient {
   private url: string;
 
   constructor(url?: string) {
-    this.url = url ?? process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:3001/signal";
+    this.url = url ?? getSignalUrl();
   }
 
-  connect(): Promise<void> {
+  get connected(): boolean {
+    return this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  async connect(retries = 4): Promise<void> {
+    await wakeServer();
+    let lastError: Error | undefined;
+
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        await this.connectOnce();
+        return;
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error("WebSocket failed");
+        if (attempt < retries - 1) {
+          await sleep(1500 * (attempt + 1));
+          await wakeServer();
+        }
+      }
+    }
+
+    throw lastError ?? new Error("Could not connect to game server");
+  }
+
+  private connectOnce(): Promise<void> {
     return new Promise((resolve, reject) => {
+      this.ws?.close();
       this.ws = new WebSocket(this.url);
       this.ws.onopen = () => resolve();
-      this.ws.onerror = () => reject(new Error("WebSocket failed"));
+      this.ws.onerror = () => reject(new Error(`WebSocket failed (${this.url})`));
       this.ws.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data as string) as Record<string, unknown>;
@@ -38,8 +70,44 @@ export class SignalClient {
     }
   }
 
-  register(playerId: string, displayName: string, elo: number, isPro: boolean): void {
-    this.send({ type: "register", playerId, displayName, elo, isPro });
+  async registerAndWait(
+    playerId: string,
+    displayName: string,
+    elo: number,
+    isPro: boolean,
+    lastPdl?: PdlResult
+  ): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        off();
+        reject(new Error("Server registration timed out"));
+      }, 20_000);
+
+      const off = this.onMessage((msg) => {
+        if (msg.type === "registered") {
+          clearTimeout(timeout);
+          off();
+          resolve();
+        }
+        if (msg.type === "error") {
+          clearTimeout(timeout);
+          off();
+          reject(new Error(String(msg.message ?? "Registration failed")));
+        }
+      });
+
+      this.register(playerId, displayName, elo, isPro, lastPdl);
+    });
+  }
+
+  register(
+    playerId: string,
+    displayName: string,
+    elo: number,
+    isPro: boolean,
+    lastPdl?: PdlResult
+  ): void {
+    this.send({ type: "register", playerId, displayName, elo, isPro, lastPdl });
   }
 
   joinQueue(): void {
@@ -72,14 +140,6 @@ export class SignalClient {
 
   battleEnd(matchId: string): void {
     this.send({ type: "battle_end", matchId });
-  }
-
-  vote(matchId: string, votedForId: string): void {
-    this.send({ type: "vote", matchId, votedForId });
-  }
-
-  spectate(matchId: string): void {
-    this.send({ type: "spectate", matchId });
   }
 
   skip(matchId?: string): void {

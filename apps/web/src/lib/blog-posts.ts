@@ -18,7 +18,7 @@ export const BLOG_POSTS: BlogPost[] = [
       "PDL (Perceived Dog Level) is Odoggle's dog-themed answer to facial rating — but built for snouts, not humans.",
       "When you scan in The Lab, your browser runs two ONNX models trained on DogFLW: a face localizer crops your dog, then a 46-point landmark regressor maps symmetry, harmony, muzzle shape, coat texture, and eye alertness.",
       "Each sub-score is normalized 0–100, weighted (harmony and symmetry matter most), then mapped to a 1–10 band with clustering in the middle — so a 5.5 and a 6.2 feel meaningfully different.",
-      "Nothing leaves your device. PDL is advisory. The bark battle is decided by audience vote, not your scan.",
+      "Nothing leaves your device. PDL is scored on-device — the higher rating wins the bark battle.",
     ],
   },
   {
@@ -38,13 +38,13 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "5 tips to win your first bark battle",
     tag: "STRATEGY",
     date: "2026-06-03",
-    excerpt: "Framing, energy, and getting friends to vote on /spectate.",
+    excerpt: "Framing, energy, and queue etiquette for your first match.",
     body: [
       "1. Frame the face — fill 40–70% of the frame. Arena checks this before matchmaking.",
       "2. Light the snout — backlight kills landmark confidence and makes you look sleepy on cam.",
-      "3. Energy in the 15 seconds — still dogs lose crowd votes to wiggle energy.",
-      "4. Share /spectate — matches need at least 3 audience votes. Queue friends or open a second tab.",
-      "5. Skip toxic matches — report bad actors. ELO is server-authoritative; votes are the only thing that matters.",
+      "3. Energy in the 15 seconds — motion and alert eyes read better on camera.",
+      "4. Queue during peak hours — faster matchmaking and more opponents in your ELO band.",
+      "5. Skip toxic matches — report bad actors. ELO is server-authoritative.",
     ],
   },
 ];
