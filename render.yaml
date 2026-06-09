@@ -7,7 +7,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci --include=dev && npm run build -w @odoggle/shared && npm run build -w @odoggle/server
+    buildCommand: NPM_CONFIG_PRODUCTION=false npm ci && npm run build -w @odoggle/shared && npm run build -w @odoggle/server
     startCommand: npm run start -w @odoggle/server
     healthCheckPath: /health
     envVars:
