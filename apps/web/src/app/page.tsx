@@ -16,15 +16,21 @@ export default async function HomePage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <section className="text-center py-16">
-        <p className="text-amber-400 text-sm mb-2 uppercase tracking-widest">
+      <section className="text-center py-16 md:py-20">
+        <p className="text-amber-400 text-sm mb-6 uppercase tracking-widest">
           Live · {stats.activePlayers} dogs online
         </p>
-        <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
-          Odoggle
+        <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tight leading-none mb-6 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 bg-clip-text text-transparent">
+          ODOGGLE
         </h1>
-        <p className="text-xl text-zinc-300 mb-2">The 1v1 Dog Battle Game.</p>
-        <p className="text-zinc-500 max-w-2xl mx-auto mb-8">
+        <div className="flex items-center justify-center gap-4 mb-5">
+          <span className="h-px w-12 bg-zinc-700" aria-hidden />
+          <p className="text-sm md:text-base font-semibold uppercase tracking-[0.2em] text-zinc-400">
+            The 1v1 Dog Battle Game
+          </p>
+          <span className="h-px w-12 bg-zinc-700" aria-hidden />
+        </div>
+        <p className="text-zinc-500 max-w-2xl mx-auto mb-10 text-base md:text-lg leading-relaxed">
           Random 1v1 dog face battle arena. Verify your PDL rating, win the bark off, climb the global top dog ladder.
         </p>
         <div className="flex gap-4 justify-center flex-wrap">

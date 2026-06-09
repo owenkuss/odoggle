@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { ProfileBar } from "@/components/profile-bar";
 
 const LINKS = [
   { href: "/lab", label: "The Lab" },
   { href: "/arena", label: "Arena" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/spectate", label: "Vote" },
-  { href: "/room", label: "Private Room" },
+  { href: "/room", label: "Rooms" },
   { href: "/profile", label: "Profile" },
   { href: "/pricing", label: "Pro" },
 ];
@@ -19,42 +20,55 @@ export function Nav() {
   const pathname = usePathname();
 
   return (
-    <header className="border-b border-zinc-800 px-4 md:px-6 py-4">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold text-amber-400 shrink-0">
-          Odoggle
+    <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-[#0a0a0f]/90 backdrop-blur-md">
+      <div className="max-w-6xl mx-auto flex items-center gap-4 px-4 md:px-6 py-3">
+        <Link
+          href="/"
+          className="text-base md:text-lg font-black tracking-tight text-amber-400 uppercase shrink-0 hover:text-amber-300 transition-colors"
+        >
+          ODOGGLE
         </Link>
 
-        <nav className="hidden md:flex gap-4 text-sm text-zinc-400">
+        <nav className="hidden lg:flex flex-1 items-center justify-center gap-1 text-sm">
           {LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className={pathname === l.href ? "text-white" : "hover:text-white"}
+              className={`px-3 py-1.5 rounded-md transition-colors ${
+                pathname === l.href
+                  ? "text-amber-400 bg-zinc-900"
+                  : "text-zinc-400 hover:text-white hover:bg-zinc-900/60"
+              }`}
             >
               {l.label}
             </Link>
           ))}
         </nav>
 
-        <button
-          type="button"
-          className="md:hidden text-zinc-400 hover:text-white p-2"
-          onClick={() => setOpen(!open)}
-          aria-label="Menu"
-        >
-          {open ? "✕" : "☰"}
-        </button>
+        <div className="flex items-center gap-2 ml-auto shrink-0">
+          <ProfileBar />
+          <button
+            type="button"
+            className="lg:hidden text-zinc-400 hover:text-white p-2 rounded-md hover:bg-zinc-900"
+            onClick={() => setOpen(!open)}
+            aria-label="Menu"
+            aria-expanded={open}
+          >
+            {open ? "✕" : "☰"}
+          </button>
+        </div>
       </div>
 
       {open && (
-        <nav className="md:hidden mt-4 pb-2 flex flex-col gap-2 text-sm border-t border-zinc-800 pt-4">
+        <nav className="lg:hidden border-t border-zinc-800/80 px-4 pb-4 pt-2 grid grid-cols-2 gap-1 text-sm">
           {LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
-              className={`py-2 px-2 rounded ${pathname === l.href ? "text-amber-400 bg-zinc-900" : "text-zinc-400"}`}
+              className={`py-2.5 px-3 rounded-md ${
+                pathname === l.href ? "text-amber-400 bg-zinc-900" : "text-zinc-400 hover:bg-zinc-900/60"
+              }`}
             >
               {l.label}
             </Link>

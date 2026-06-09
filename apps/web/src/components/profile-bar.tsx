@@ -36,19 +36,29 @@ export function ProfileBar() {
   }, [session, player.id, player.isGuest, claimProfile]);
 
   return (
-    <div className="fixed top-4 right-4 z-40 flex items-center gap-2 text-sm">
-      <span className="text-zinc-400">{player.displayName}</span>
-      <Link href="/profile" className="text-zinc-600 hover:text-amber-400 text-xs">
-        {player.elo} ELO
+    <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-zinc-800 text-xs md:text-sm">
+      <Link href="/profile" className="flex items-center gap-2 min-w-0 hover:opacity-90">
+        <span className="text-zinc-300 font-medium truncate max-w-[7rem] md:max-w-[9rem]">
+          {player.displayName}
+        </span>
+        <span className="text-amber-400/90 font-mono tabular-nums shrink-0">{player.elo}</span>
       </Link>
-      {player.isPro && <span className="text-purple-400 text-xs">Pro</span>}
+      {player.isPro && (
+        <span className="text-purple-400 text-[10px] font-bold uppercase tracking-wide shrink-0">Pro</span>
+      )}
       {session ? (
-        <button onClick={() => signOut()} className="text-zinc-500 hover:text-white text-xs">
+        <button
+          onClick={() => signOut()}
+          className="text-zinc-500 hover:text-white shrink-0 px-2 py-1 rounded hover:bg-zinc-900"
+        >
           Sign out
         </button>
       ) : (
-        <button onClick={() => signIn("google")} className="text-zinc-500 hover:text-white text-xs">
-          Claim profile
+        <button
+          onClick={() => signIn("google")}
+          className="text-zinc-400 hover:text-amber-400 shrink-0 px-2 py-1 rounded hover:bg-zinc-900 whitespace-nowrap"
+        >
+          Claim
         </button>
       )}
     </div>
