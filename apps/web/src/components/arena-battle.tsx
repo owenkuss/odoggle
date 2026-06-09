@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { MATCH_DURATION_SEC } from "@odoggle/shared";
+import { CameraCheck } from "@/components/camera-check";
 import { ReportButton } from "@/components/report-button";
 import { usePlayer } from "@/lib/player-context";
 import { SignalClient } from "@/lib/signal-client";
@@ -22,8 +23,8 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
   const matchIdRef = useRef<string | null>(null);
 
   const [phase, setPhase] = useState<
-    "idle" | "queued" | "waiting_room" | "matched" | "battle" | "voting" | "result"
-  >("idle");
+    "camera_check" | "queued" | "waiting_room" | "matched" | "battle" | "voting" | "result"
+  >("camera_check");
   const [matchId, setMatchId] = useState<string | null>(null);
   const [opponentName, setOpponentName] = useState("Opponent");
   const [opponentElo, setOpponentElo] = useState(0);
@@ -125,7 +126,7 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
 
       if (msg.type === "match_cancelled") {
         cleanup();
-        setPhase("idle");
+        setPhase("camera_check");
         setConnectionState("");
         setMatchId(null);
         matchIdRef.current = null;
@@ -161,28 +162,43 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
 
     if (roomCode) signal.enterRoom(roomCode);
     else signal.joinQueue();
-  }, [player, roomCode, opponentName, updateElo, recordWin, recordLoss]);
+  }, [player, roomCode, opponentName, updateElo, recordWin, recordLoss, cleanup]);
+
+  const resetToCameraCheck = useCallback(() => {
+    if (matchIdRef.current) signalRef.current?.skip(matchIdRef.current);
+    else signalRef.current?.skip();
+    cleanup();
+    setPhase("camera_check");
+    setMatchId(null);
+    matchIdRef.current = null;
+    setConnectionState("");
+    setResultText("");
+    setEloDelta(0);
+    setNewElo(null);
+  }, [cleanup]);
 
   return (
     <div className="max-w-4xl mx-auto">
-      {phase === "idle" && (
-        <button
-          onClick={enterArena}
-          className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-xl text-lg"
-        >
-          {roomCode ? "ENTER PRIVATE MATCH →" : "ENTER ARENA →"}
-        </button>
+      {phase === "camera_check" && (
+        <div>
+          <p className="text-zinc-500 text-center text-sm mb-6">
+            {roomCode
+              ? "Frame your dog for the private match — we check lighting and framing before connecting."
+              : "Frame your dog to join the queue — we check lighting and framing before matchmaking."}
+          </p>
+          <CameraCheck
+            key={roomCode ?? "ranked"}
+            continueLabel={roomCode ? "Join private match →" : "Join arena →"}
+            onPass={() => void enterArena()}
+          />
+        </div>
       )}
       {phase === "queued" && (
         <div className="text-center text-zinc-400 py-8">
           <div className="animate-pulse mb-2">Finding opponent...</div>
           <p className="text-xs text-zinc-600 mb-4">You may be pulled as jury to vote on other matches</p>
           <button
-            onClick={() => {
-              signalRef.current?.skip();
-              cleanup();
-              setPhase("idle");
-            }}
+            onClick={resetToCameraCheck}
             className="px-4 py-2 bg-zinc-800 rounded-lg text-sm"
           >
             Leave queue
@@ -252,18 +268,7 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
             >
               {videoMuted ? "Show cam" : "Hide cam"}
             </button>
-            <button
-              onClick={() => {
-                if (matchIdRef.current) signalRef.current?.skip(matchIdRef.current);
-                else signalRef.current?.skip();
-                cleanup();
-                setPhase("idle");
-                setMatchId(null);
-                matchIdRef.current = null;
-                setConnectionState("");
-              }}
-              className="px-4 py-2 bg-zinc-800 rounded-lg text-sm"
-            >
+            <button onClick={resetToCameraCheck} className="px-4 py-2 bg-zinc-800 rounded-lg text-sm">
               Skip
             </button>
             {matchId && <ReportButton matchId={matchId} />}
@@ -281,14 +286,7 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
           )}
           <div className="flex gap-3 justify-center flex-wrap">
             <button
-              onClick={() => {
-                cleanup();
-                setPhase("idle");
-                setResultText("");
-                setEloDelta(0);
-                setNewElo(null);
-                setConnectionState("");
-              }}
+              onClick={resetToCameraCheck}
               className="bg-amber-500 text-black px-6 py-3 rounded-lg font-semibold"
             >
               Queue again

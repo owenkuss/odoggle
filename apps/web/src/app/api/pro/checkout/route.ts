@@ -48,7 +48,10 @@ export async function POST(req: Request) {
       {
         price_data: {
           currency: "usd",
-          product_data: { name: "Odoggle Pro" },
+          product_data: {
+            name: "Odoggle Pro — Lifetime",
+            description: "Lifetime access to The Lab, PDL scans, priority queue, and Pro badge.",
+          },
           unit_amount: Math.round(PRO_PRICE_USD * 100),
         },
         quantity: 1,

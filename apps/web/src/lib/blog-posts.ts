@@ -30,7 +30,7 @@ export const BLOG_POSTS: BlogPost[] = [
     body: [
       "Eye alertness measures the angle between inner and outer eye corners — the same canthal tilt idea used in human PSL, adapted for DogFLW landmarks.",
       "Dogs with level, engaged eyes tend to score higher than droopy or asymmetric corners. Breed matters: some breeds naturally have different baseline tilts, so treat sub-scores as fun calibration, not judgment.",
-      "Good lighting helps the landmark model. Run Camera Check first if your score looks off.",
+      "Good lighting helps the landmark model. Arena runs a camera check when you queue if your score looks off.",
     ],
   },
   {
@@ -40,7 +40,7 @@ export const BLOG_POSTS: BlogPost[] = [
     date: "2026-06-03",
     excerpt: "Framing, energy, and getting friends to vote on /spectate.",
     body: [
-      "1. Frame the face — fill 40–70% of the frame. Camera Check exists for a reason.",
+      "1. Frame the face — fill 40–70% of the frame. Arena checks this before matchmaking.",
       "2. Light the snout — backlight kills landmark confidence and makes you look sleepy on cam.",
       "3. Energy in the 15 seconds — still dogs lose crowd votes to wiggle energy.",
       "4. Share /spectate — matches need at least 3 audience votes. Queue friends or open a second tab.",

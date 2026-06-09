@@ -104,7 +104,7 @@ Upload `apps/web/public/models/*.onnx` to R2/Blob, update manifest URLs or keep 
 
 ## 10. Post-deploy checklist
 
-- [ ] Camera check + Lab scan on mobile
+- [ ] Lab scan + Arena camera check on join (mobile)
 - [ ] Two-browser arena match end-to-end
 - [ ] Audience vote via `/spectate` resolves ELO
 - [ ] Private room 4-letter code flow

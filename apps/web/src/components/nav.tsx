@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ProfileBar } from "@/components/profile-bar";
+import { usePlayer } from "@/lib/player-context";
 
 const LINKS = [
-  { href: "/lab", label: "The Lab" },
+  { href: "/lab", label: "The Lab", proOnly: true },
   { href: "/arena", label: "Arena" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/spectate", label: "Vote" },
@@ -18,6 +19,7 @@ const LINKS = [
 export function Nav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { player } = usePlayer();
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-[#0a0a0f]/90 backdrop-blur-md">
@@ -34,13 +36,16 @@ export function Nav() {
             <Link
               key={l.href}
               href={l.href}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
+              className={`px-3 py-1.5 rounded-md transition-colors inline-flex items-center gap-1 ${
                 pathname === l.href
                   ? "text-amber-400 bg-zinc-900"
                   : "text-zinc-400 hover:text-white hover:bg-zinc-900/60"
               }`}
             >
               {l.label}
+              {l.proOnly && !player.isPro && (
+                <span className="text-[9px] font-bold text-purple-400 uppercase">Pro</span>
+              )}
             </Link>
           ))}
         </nav>
@@ -66,11 +71,14 @@ export function Nav() {
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
-              className={`py-2.5 px-3 rounded-md ${
+              className={`py-2.5 px-3 rounded-md inline-flex items-center gap-1 ${
                 pathname === l.href ? "text-amber-400 bg-zinc-900" : "text-zinc-400 hover:bg-zinc-900/60"
               }`}
             >
               {l.label}
+              {l.proOnly && !player.isPro && (
+                <span className="text-[9px] font-bold text-purple-400 uppercase">Pro</span>
+              )}
             </Link>
           ))}
         </nav>

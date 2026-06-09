@@ -153,6 +153,9 @@ app.post("/api/player/pdl", async (req, res) => {
   const { playerId, pdl } = req.body;
   if (!playerId || !pdl) return res.status(400).json({ error: "playerId and pdl required" });
   const existing = matchmaker.getPlayer(String(playerId)) ?? (await loadPlayer(String(playerId)));
+  if (!existing?.isPro) {
+    return res.status(403).json({ error: "Pro required for Lab PDL scans" });
+  }
   const profile = matchmaker.upsertPlayer({
     id: String(playerId),
     displayName: existing?.displayName ?? "Player",

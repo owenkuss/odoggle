@@ -5,9 +5,10 @@ import { detectDogFace, getFrameBrightness, validateCameraFrame } from "@/lib/pd
 
 interface CameraCheckProps {
   onPass: () => void;
+  continueLabel?: string;
 }
 
-export function CameraCheck({ onPass }: CameraCheckProps) {
+export function CameraCheck({ onPass, continueLabel = "Continue →" }: CameraCheckProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [status, setStatus] = useState("Starting camera...");
   const [passed, setPassed] = useState(false);
@@ -62,7 +63,7 @@ export function CameraCheck({ onPass }: CameraCheckProps) {
           onClick={onPass}
           className="mt-4 w-full bg-amber-500 hover:bg-amber-400 text-black font-semibold py-3 rounded-lg"
         >
-          Continue →
+          {continueLabel}
         </button>
       )}
     </div>

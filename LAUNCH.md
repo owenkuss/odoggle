@@ -21,7 +21,7 @@ In another terminal:
 scripts\smoke-test.cmd
 ```
 
-Manual: Camera check → Lab → Arena (two tabs) → `/spectate` vote.
+Manual: Lab scan → Arena (camera check on join) → `/spectate` vote.
 
 ---
 

@@ -4,6 +4,9 @@ const nextConfig = {
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
     return config;
   },
+  async redirects() {
+    return [{ source: "/camera-check", destination: "/arena", permanent: true }];
+  },
   async rewrites() {
     const target = process.env.API_PROXY_TARGET ?? "http://localhost:3001";
     return [

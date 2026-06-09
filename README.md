@@ -39,13 +39,13 @@ npm run dev
 
 | Feature | Status |
 |---------|--------|
-| Landing, Lab, Camera Check, Arena, Rooms | Done |
+| Landing, Arena (free), Lab (Pro only), Rooms | Done |
 | Browser PDL (ONNX + heuristic fallback) | Done |
 | WebRTC 1v1 + 15s battle + ELO | Done |
 | Real audience voting (`/spectate` + jury pool) | Done |
 | Postgres + Redis persistence | Done |
 | Google profile merge | Done |
-| Stripe + Creem checkout | Done (needs keys) |
+| Stripe + Creem lifetime Pro checkout | Done (needs keys) |
 | ML training pipeline | Done (needs GPU + DogFLW) |
 | CI (GitHub Actions) | Done |
 | Production deploy guide | [infra/DEPLOY.md](infra/DEPLOY.md) |

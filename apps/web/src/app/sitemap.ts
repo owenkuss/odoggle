@@ -7,7 +7,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "",
     "/lab",
     "/arena",
-    "/camera-check",
     "/leaderboard",
     "/spectate",
     "/room",

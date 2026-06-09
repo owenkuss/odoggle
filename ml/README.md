@@ -69,4 +69,4 @@ Outputs to `apps/web/public/models/`:
 
 Upload ONNX files to R2/Vercel Blob with long cache headers. Update manifest paths if using external CDN.
 
-Until models are present, the web app uses heuristic fallback for Camera Check and The Lab.
+Until models are present, the web app uses heuristic fallback for Arena camera check and The Lab.

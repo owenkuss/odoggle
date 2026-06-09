@@ -71,7 +71,14 @@ export default function ProfilePage() {
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
         <h2 className="font-semibold mb-4">Latest PDL Scan</h2>
-        {player.lastPdl ? (
+        {!player.isPro ? (
+          <p className="text-zinc-500 text-sm text-center py-4">
+            The Lab is a Pro feature.{" "}
+            <Link href="/pricing" className="text-amber-400 hover:underline">
+              Get lifetime Pro →
+            </Link>
+          </p>
+        ) : player.lastPdl ? (
           <>
             <div className="text-center mb-4">
               <div className="text-4xl font-bold text-amber-400">{player.lastPdl.composite}</div>
@@ -88,12 +95,14 @@ export default function ProfilePage() {
         ) : (
           <p className="text-zinc-500 text-sm text-center py-4">
             No scan yet.{" "}
-            <Link href="/lab" className="text-amber-400 hover:underline">Run one in The Lab →</Link>
+            <Link href="/lab" className="text-amber-400 hover:underline">
+              Run one in The Lab →
+            </Link>
           </p>
         )}
       </div>
 
-      {history.length > 0 && (
+      {player.isPro && history.length > 0 && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
           <h2 className="font-semibold mb-4">Scan history</h2>
           <ul className="space-y-2">
@@ -111,9 +120,15 @@ export default function ProfilePage() {
       )}
 
       <div className="flex gap-3">
-        <Link href="/lab" className="flex-1 text-center bg-zinc-800 hover:bg-zinc-700 py-3 rounded-lg text-sm">
-          The Lab
-        </Link>
+        {player.isPro ? (
+          <Link href="/lab" className="flex-1 text-center bg-zinc-800 hover:bg-zinc-700 py-3 rounded-lg text-sm">
+            The Lab
+          </Link>
+        ) : (
+          <Link href="/pricing" className="flex-1 text-center bg-zinc-800 hover:bg-zinc-700 py-3 rounded-lg text-sm">
+            Get Pro
+          </Link>
+        )}
         <Link href="/arena" className="flex-1 text-center bg-amber-500 hover:bg-amber-400 text-black font-semibold py-3 rounded-lg text-sm">
           Arena
         </Link>

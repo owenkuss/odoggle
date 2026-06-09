@@ -26,3 +26,5 @@ export const PDL_WEIGHTS = {
 } as const;
 
 export const PRO_PRICE_USD = 9.99;
+/** Pro is a one-time purchase — no subscription, no expiry */
+export const PRO_IS_LIFETIME = true;
