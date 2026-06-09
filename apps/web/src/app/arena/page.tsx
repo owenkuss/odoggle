@@ -24,13 +24,13 @@ export default function ArenaPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-2 text-center">1v1 Arena</h1>
-      <p className="text-zinc-500 text-center mb-2">
+      <h1 className="text-3xl font-bold mb-2 text-center text-hero">1v1 Arena</h1>
+      <p className="text-muted text-center mb-2">
         Free for everyone · PDL scored on join · winner by dog rating
       </p>
-      <div className="text-center text-sm text-zinc-600 mb-8">
-        {player.displayName} · {player.elo} ELO · {player.wins}W-{player.losses}L
-        {player.isPro && <span className="text-purple-400 ml-2">· Pro</span>}
+      <div className="text-center text-sm text-muted mb-8">
+        {player.displayName} · <span className="text-accent-bright">{player.elo}</span> ELO · {player.wins}W-{player.losses}L
+        {player.isPro && <span className="text-pro-bright ml-2">· Pro</span>}
       </div>
       <Suspense fallback={<div className="text-center text-zinc-500">Loading...</div>}>
         <ArenaContent />

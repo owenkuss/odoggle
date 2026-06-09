@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
+import { Outfit } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/ui";
 import "./globals.css";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Odoggle — 1v1 Dog Battle Game · Live PDL Rating",
@@ -21,8 +28,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className={outfit.variable}>
+      <body className="theme-body antialiased">
+        <div className="theme-ambient" aria-hidden />
         <Providers>
           <Nav />
           <main className="min-h-screen px-6 py-8">{children}</main>

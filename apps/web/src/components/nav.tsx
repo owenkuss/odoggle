@@ -21,11 +21,11 @@ export function Nav() {
   const { player } = usePlayer();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-[#0a0a0f]/90 backdrop-blur-md">
+    <header className="theme-nav sticky top-0 z-50">
       <div className="max-w-6xl mx-auto flex items-center gap-4 px-4 md:px-6 py-3">
         <Link
           href="/"
-          className="text-base md:text-lg font-black tracking-tight text-amber-400 uppercase shrink-0 hover:text-amber-300 transition-colors"
+          className="text-base md:text-lg font-black tracking-tight text-hero uppercase shrink-0 hover:opacity-90 transition-opacity"
         >
           ODOGGLE
         </Link>
@@ -35,15 +35,13 @@ export function Nav() {
             <Link
               key={l.href}
               href={l.href}
-              className={`px-3 py-1.5 rounded-md transition-colors inline-flex items-center gap-1 ${
-                pathname === l.href
-                  ? "text-amber-400 bg-zinc-900"
-                  : "text-zinc-400 hover:text-white hover:bg-zinc-900/60"
+              className={`px-3 py-1.5 rounded-md inline-flex items-center gap-1 ${
+                pathname === l.href ? "nav-link-active" : "nav-link"
               }`}
             >
               {l.label}
               {l.proOnly && !player.isPro && (
-                <span className="text-[9px] font-bold text-purple-400 uppercase">Pro</span>
+                <span className="text-[9px] font-bold text-pro-bright uppercase">Pro</span>
               )}
             </Link>
           ))}
@@ -53,7 +51,7 @@ export function Nav() {
           <ProfileBar />
           <button
             type="button"
-            className="lg:hidden text-zinc-400 hover:text-white p-2 rounded-md hover:bg-zinc-900"
+            className="lg:hidden text-muted hover:text-white p-2 rounded-md hover:bg-white/5"
             onClick={() => setOpen(!open)}
             aria-label="Menu"
             aria-expanded={open}
@@ -64,19 +62,19 @@ export function Nav() {
       </div>
 
       {open && (
-        <nav className="lg:hidden border-t border-zinc-800/80 px-4 pb-4 pt-2 grid grid-cols-2 gap-1 text-sm">
+        <nav className="lg:hidden border-t border-white/6 px-4 pb-4 pt-2 grid grid-cols-2 gap-1 text-sm">
           {LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
               className={`py-2.5 px-3 rounded-md inline-flex items-center gap-1 ${
-                pathname === l.href ? "text-amber-400 bg-zinc-900" : "text-zinc-400 hover:bg-zinc-900/60"
+                pathname === l.href ? "nav-link-active" : "nav-link"
               }`}
             >
               {l.label}
               {l.proOnly && !player.isPro && (
-                <span className="text-[9px] font-bold text-purple-400 uppercase">Pro</span>
+                <span className="text-[9px] font-bold text-pro-bright uppercase">Pro</span>
               )}
             </Link>
           ))}
