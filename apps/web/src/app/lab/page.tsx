@@ -14,7 +14,7 @@ export default function LabPage() {
       <h1 className="text-3xl font-bold mb-2 text-center">The Lab</h1>
       <p className="text-zinc-500 text-center mb-8">
         {player.isPro
-          ? "Solo PDL calibration — runs entirely on your device."
+          ? "Live PDL scan — rating updates as your dog stays in frame."
           : "Pro members only · lifetime access unlocks The Lab."}
       </p>
       {!gateAccepted && <GateModal onAccept={acceptGate} />}

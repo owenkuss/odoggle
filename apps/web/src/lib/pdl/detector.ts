@@ -45,6 +45,10 @@ function averageBrightness(imageData: ImageData): number {
   return sum / (data.length / (4 * step));
 }
 
+export function isHeuristicMode(): boolean {
+  return modelsFailed || !localizerSession || !landmarkSession;
+}
+
 export async function loadModels(basePath = "/models"): Promise<ModelManifest> {
   if (manifest) return manifest;
 
