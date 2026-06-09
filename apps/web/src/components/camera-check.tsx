@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { computePdl, detectDogFace, getFrameBrightness, validateCameraFrame } from "@/lib/pdl";
 import type { PdlResult } from "@odoggle/shared";
+import { isHeuristicMode, loadModels } from "@/lib/pdl";
+import { useLivePdlScan } from "@/lib/pdl/use-live-pdl-scan";
 
 interface CameraCheckProps {
   onPass: (pdl: PdlResult, stream: MediaStream) => void;
@@ -11,59 +12,37 @@ interface CameraCheckProps {
 
 export function CameraCheck({ onPass, continueLabel = "Continue →" }: CameraCheckProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const keepStreamRef = useRef(false);
-  const [status, setStatus] = useState("Starting camera...");
-  const [passed, setPassed] = useState(false);
-  const [pdlResult, setPdlResult] = useState<PdlResult | null>(null);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [usingHeuristic, setUsingHeuristic] = useState(true);
+
+  const { livePdl, framingHint, framingOk } = useLivePdlScan(
+    videoRef,
+    overlayRef,
+    cameraReady
+  );
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
+    let stream: MediaStream;
+    void loadModels().then(() => setUsingHeuristic(isHeuristicMode()));
 
-    async function start() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-          audio: false,
-        });
-        streamRef.current = stream;
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false })
+      .then((s) => {
+        stream = s;
+        streamRef.current = s;
         if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
+          videoRef.current.srcObject = s;
+          void videoRef.current.play().then(() => setCameraReady(true));
         }
+      })
+      .catch(() => setCameraReady(false));
 
-        interval = setInterval(async () => {
-          const video = videoRef.current;
-          if (!video) return;
-          const brightness = getFrameBrightness(video);
-          const detection = await detectDogFace(video);
-          const result = validateCameraFrame(detection, brightness);
-          if (result.ok && detection) {
-            const canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext("2d")!;
-            ctx.drawImage(video, 0, 0);
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const pdl = computePdl(detection, imageData);
-            setPdlResult(pdl);
-            setStatus(`Camera check passed · PDL ${pdl.composite}`);
-            setPassed(true);
-            clearInterval(interval);
-          } else {
-            setStatus(result.reason ?? "Adjust framing...");
-          }
-        }, 500);
-      } catch {
-        setStatus("Camera permission denied.");
-      }
-    }
-
-    void start();
     return () => {
-      clearInterval(interval);
       if (!keepStreamRef.current) {
-        streamRef.current?.getTracks().forEach((t) => t.stop());
+        stream?.getTracks().forEach((t) => t.stop());
       }
       streamRef.current = null;
     };
@@ -71,15 +50,49 @@ export function CameraCheck({ onPass, continueLabel = "Continue →" }: CameraCh
 
   return (
     <div className="max-w-lg mx-auto">
-      <video ref={videoRef} className="w-full rounded-xl bg-black aspect-video" muted playsInline autoPlay />
-      <p className={`mt-4 text-center ${passed ? "text-green-400" : "text-zinc-400"}`}>{status}</p>
-      {passed && pdlResult && streamRef.current && (
+      <div className="relative rounded-xl overflow-hidden bg-black aspect-video border border-white/10">
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover"
+          muted
+          playsInline
+          autoPlay
+        />
+        <canvas
+          ref={overlayRef}
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        />
+        {livePdl && (
+          <div className="absolute top-3 right-3 glass-card px-3 py-2 text-center min-w-[4.5rem] border-amber-500/30">
+            <div className="text-[10px] uppercase tracking-widest text-muted">Live PDL</div>
+            <div className="text-3xl font-black stat-value tabular-nums leading-none">
+              {livePdl.composite.toFixed(1)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <p
+        className={`mt-3 text-center text-sm ${
+          framingOk ? "text-teal" : "text-muted"
+        }`}
+      >
+        {framingHint}
+      </p>
+
+      {usingHeuristic && cameraReady && (
+        <p className="text-xs text-center text-amber-400/70 mt-1">
+          Heuristic mode — train ONNX models for maximum accuracy
+        </p>
+      )}
+
+      {framingOk && livePdl && streamRef.current && (
         <button
           onClick={() => {
             keepStreamRef.current = true;
-            onPass(pdlResult, streamRef.current!);
+            onPass(livePdl, streamRef.current!);
           }}
-          className="mt-4 w-full bg-amber-500 hover:bg-amber-400 text-black font-semibold py-3 rounded-lg"
+          className="btn-accent w-full mt-4"
         >
           {continueLabel}
         </button>
