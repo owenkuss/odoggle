@@ -37,10 +37,12 @@ export interface LeaderboardEntry {
   id: string;
   displayName: string;
   elo: number;
+  peakElo: number;
   wins: number;
   losses: number;
   isPro: boolean;
   isTopDog: boolean;
+  pdl?: number;
 }
 
 export interface MatchOutcome {

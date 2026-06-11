@@ -71,6 +71,7 @@ export async function dbGetLeaderboard(limit: number) {
     losses: Number(row.losses),
     isPro: Boolean(row.is_pro),
     isTopDog: i < TOP_DOG_RANK,
+    pdl: row.last_pdl ? (row.last_pdl as PdlResult).composite : undefined,
   }));
 }
 

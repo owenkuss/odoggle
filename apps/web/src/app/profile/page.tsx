@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getRankTitle, PDL_SCAN_TTL_MS, type PdlResult } from "@odoggle/shared";
+import { PDL_SCAN_TTL_MS, getRankTier, type PdlResult } from "@odoggle/shared";
 import { PdlBar } from "@/components/ui";
 import { loadPdlHistory } from "@/lib/pdl-history";
 import { usePlayer } from "@/lib/player-context";
@@ -19,7 +19,7 @@ function formatScanDate(ts: number): string {
 export default function ProfilePage() {
   const { player } = usePlayer();
   const [history, setHistory] = useState<PdlResult[]>([]);
-  const rank = getRankTitle(player.elo);
+  const tier = getRankTier(player.elo);
   const pdlFresh =
     player.lastPdl && Date.now() - player.lastPdl.scannedAt < PDL_SCAN_TTL_MS;
 
@@ -29,61 +29,70 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-lg mx-auto">
-      <h1 className="text-3xl font-bold mb-8 text-center">Your Profile</h1>
+      <h1 className="text-3xl font-bold mb-2 text-center text-hero">Your Profile</h1>
+      <p className="text-muted text-center mb-8">Stats, PDL history, and ladder tier</p>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+      <div className="glass-card p-6 mb-6">
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="text-2xl font-bold">{player.displayName}</div>
-            <div className="text-amber-400 text-sm mt-1">{rank}</div>
+            <div className="text-accent-bright text-sm mt-1">
+              {tier.emoji} {tier.title}
+            </div>
           </div>
           <div className="flex gap-2">
             {player.isPro && (
-              <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">Pro</span>
+              <span className="text-xs bg-purple-500/20 text-pro-bright px-2 py-1 rounded">Pro</span>
             )}
             {player.isGuest && (
-              <span className="text-xs bg-zinc-800 text-zinc-500 px-2 py-1 rounded">Guest</span>
+              <span className="text-xs bg-white/5 text-muted px-2 py-1 rounded">Guest</span>
             )}
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4 text-center mb-6">
           <div>
-            <div className="text-2xl font-bold text-amber-400">{player.elo}</div>
-            <div className="text-xs text-zinc-500">ELO</div>
+            <div className="text-2xl font-bold stat-value tabular-nums">{player.elo}</div>
+            <div className="text-xs text-muted">ELO</div>
           </div>
           <div>
-            <div className="text-2xl font-bold">{player.peakElo}</div>
-            <div className="text-xs text-zinc-500">Peak</div>
+            <div className="text-2xl font-bold tabular-nums">{player.peakElo}</div>
+            <div className="text-xs text-muted">Peak</div>
           </div>
           <div>
-            <div className="text-2xl font-bold">{player.wins}-{player.losses}</div>
-            <div className="text-xs text-zinc-500">W-L</div>
+            <div className="text-2xl font-bold tabular-nums">
+              {player.wins}-{player.losses}
+            </div>
+            <div className="text-xs text-muted">W-L</div>
           </div>
         </div>
 
-        {!player.isGuest ? null : (
-          <p className="text-xs text-zinc-600 text-center">
+        <Link href="/leaderboard" className="block text-center text-sm text-accent-bright hover:underline">
+          View global rank →
+        </Link>
+
+        {player.isGuest && (
+          <p className="text-xs text-muted text-center mt-4">
             Link Google (top-right) to save rank across devices.
           </p>
         )}
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+      <div className="glass-card p-6 mb-6">
         <h2 className="font-semibold mb-4">Latest PDL Scan</h2>
         {!player.isPro ? (
-          <p className="text-zinc-500 text-sm text-center py-4">
+          <p className="text-muted text-sm text-center py-4">
             The Lab is a Pro feature.{" "}
-            <Link href="/pricing" className="text-amber-400 hover:underline">
+            <Link href="/pricing" className="text-accent-bright hover:underline">
               Get lifetime Pro →
             </Link>
           </p>
         ) : player.lastPdl ? (
           <>
             <div className="text-center mb-4">
-              <div className="text-4xl font-bold text-amber-400">{player.lastPdl.composite}</div>
+              <div className="text-4xl font-bold stat-value">{player.lastPdl.composite}</div>
               {!pdlFresh && (
-                <p className="text-xs text-red-400 mt-1">Expired — rescan in The Lab before arena</p>
+                <p className="text-xs text-arena-bright mt-1">Stale — rescan in The Lab or at arena join</p>
               )}
             </div>
             <PdlBar label="Symmetry" value={player.lastPdl.subScores.symmetry} />
@@ -93,9 +102,9 @@ export default function ProfilePage() {
             <PdlBar label="Eye Alertness" value={player.lastPdl.subScores.eyeAlertness} />
           </>
         ) : (
-          <p className="text-zinc-500 text-sm text-center py-4">
+          <p className="text-muted text-sm text-center py-4">
             No scan yet.{" "}
-            <Link href="/lab" className="text-amber-400 hover:underline">
+            <Link href="/lab" className="text-accent-bright hover:underline">
               Run one in The Lab →
             </Link>
           </p>
@@ -103,16 +112,16 @@ export default function ProfilePage() {
       </div>
 
       {player.isPro && history.length > 0 && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+        <div className="glass-card p-6 mb-6">
           <h2 className="font-semibold mb-4">Scan history</h2>
           <ul className="space-y-2">
             {history.map((scan) => (
               <li
                 key={scan.scannedAt}
-                className="flex items-center justify-between text-sm border-b border-zinc-800 last:border-0 pb-2 last:pb-0"
+                className="flex items-center justify-between text-sm border-b border-white/5 last:border-0 pb-2 last:pb-0"
               >
-                <span className="text-zinc-500">{formatScanDate(scan.scannedAt)}</span>
-                <span className="font-semibold text-amber-400 tabular-nums">{scan.composite}</span>
+                <span className="text-muted">{formatScanDate(scan.scannedAt)}</span>
+                <span className="font-semibold text-accent-bright tabular-nums">{scan.composite}</span>
               </li>
             ))}
           </ul>
@@ -121,15 +130,15 @@ export default function ProfilePage() {
 
       <div className="flex gap-3">
         {player.isPro ? (
-          <Link href="/lab" className="flex-1 text-center bg-zinc-800 hover:bg-zinc-700 py-3 rounded-lg text-sm">
+          <Link href="/lab" className="btn-ghost flex-1 text-center text-sm py-3">
             The Lab
           </Link>
         ) : (
-          <Link href="/pricing" className="flex-1 text-center bg-zinc-800 hover:bg-zinc-700 py-3 rounded-lg text-sm">
+          <Link href="/pricing" className="btn-ghost flex-1 text-center text-sm py-3">
             Get Pro
           </Link>
         )}
-        <Link href="/arena" className="flex-1 text-center bg-amber-500 hover:bg-amber-400 text-black font-semibold py-3 rounded-lg text-sm">
+        <Link href="/arena" className="btn-accent flex-1 text-center text-sm py-3">
           Arena
         </Link>
       </div>

@@ -340,6 +340,7 @@ export class Matchmaker {
         losses: p.losses,
         isPro: p.isPro,
         isTopDog: i < TOP_DOG_RANK,
+        pdl: p.lastPdl?.composite,
       }));
   }
 
