@@ -21,7 +21,7 @@ In another terminal:
 scripts\smoke-test.cmd
 ```
 
-Manual: Lab scan → Arena (camera check on join) → bark battle → ELO result.
+Manual: Lab scan → Arena (camera check on join) → ranked match → ELO result.
 
 ---
 

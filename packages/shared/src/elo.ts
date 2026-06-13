@@ -67,12 +67,12 @@ export function generateGuestId(): string {
 }
 
 export function getRankTitle(elo: number): string {
-  if (elo >= 2400) return "Top Dog";
-  if (elo >= 2000) return "Alpha";
+  if (elo >= 2400) return "Legend";
+  if (elo >= 2000) return "Elite";
   if (elo >= 1600) return "Champion";
-  if (elo >= 1200) return "Good Boy";
-  if (elo >= 800) return "Pup";
-  return "Stray";
+  if (elo >= 1200) return "Contender";
+  if (elo >= 800) return "Rookie";
+  return "Unranked";
 }
 
 export { DEFAULT_ELO };

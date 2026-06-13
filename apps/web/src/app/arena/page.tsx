@@ -26,7 +26,7 @@ export default function ArenaPage() {
     <div className="max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-2 text-center text-hero">1v1 Arena</h1>
       <p className="text-muted text-center mb-2">
-        Free for everyone · PDL scored on join · winner by dog rating
+        Free for everyone · PDL verified on join · higher rating wins
       </p>
       <div className="text-center text-sm text-muted mb-8">
         {player.displayName} · <span className="text-accent-bright">{player.elo}</span> ELO · {player.wins}W-{player.losses}L

@@ -90,11 +90,11 @@ export function LeaderboardView({ entries }: { entries: LeaderboardEntry[] }) {
   return (
     <div className="max-w-4xl mx-auto">
       <section className="text-center mb-10">
-        <p className="live-badge mb-4 inline-flex">{entries.length} ranked dogs</p>
+        <p className="live-badge mb-4 inline-flex">{entries.length} ranked players</p>
         <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-hero mb-2">
           Global Rank
         </h1>
-        <p className="text-muted">Top 100 Top Dogs · ELO ladder · updated after every match</p>
+        <p className="text-muted">Top 100 · ELO ladder · updated after every match</p>
         <div className="flex gap-3 justify-center flex-wrap mt-6">
           <Link href="/arena" className="btn-arena">
             Enter Arena
@@ -163,10 +163,9 @@ export function LeaderboardView({ entries }: { entries: LeaderboardEntry[] }) {
 
       {entries.length === 0 ? (
         <div className="glass-card p-12 text-center">
-          <div className="text-4xl mb-4">🐕</div>
           <h2 className="text-xl font-bold mb-2">No ranked players yet</h2>
           <p className="text-muted mb-6 max-w-md mx-auto">
-            Be the first on the ladder — enter the arena, win bark battles, and claim #1.
+            Be the first on the ladder — enter the arena, win ranked matches, and claim #1.
           </p>
           <Link href="/arena" className="btn-accent inline-block">
             Start climbing →
@@ -176,7 +175,7 @@ export function LeaderboardView({ entries }: { entries: LeaderboardEntry[] }) {
         <>
           {top3.length >= 3 && (
             <section className="mb-8">
-              <h2 className="section-title text-lg mb-4 text-center text-muted">Top dogs</h2>
+              <h2 className="section-title text-lg mb-4 text-center text-muted">Top 3</h2>
               <div className="flex gap-3 items-end max-w-2xl mx-auto">
                 <PodiumCard entry={top3[1]} place={2} />
                 <PodiumCard entry={top3[0]} place={1} />

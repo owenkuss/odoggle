@@ -1,6 +1,6 @@
 # Odoggle
 
-Privacy-first 1v1 dog face battle platform. On-device PDL scoring, WebRTC matches, server-authoritative ELO.
+Privacy-first 1v1 face-off arena. On-device PDL scoring, WebRTC matches, server-authoritative ELO.
 
 ## Quick start
 

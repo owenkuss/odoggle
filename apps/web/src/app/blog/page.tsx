@@ -5,7 +5,7 @@ export default function BlogPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold mb-2">Blog</h1>
-      <p className="text-zinc-500 mb-8">PDL science, bark battle strategy, and product updates.</p>
+      <p className="text-zinc-500 mb-8">PDL science, arena strategy, and product updates.</p>
       <div className="space-y-4">
         {BLOG_POSTS.map((p) => (
           <Link

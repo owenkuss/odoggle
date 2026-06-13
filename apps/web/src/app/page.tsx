@@ -18,7 +18,7 @@ export default async function HomePage() {
     <div className="max-w-5xl mx-auto">
       <section className="text-center py-16 md:py-24">
         <p className="live-badge mb-8">
-          {stats.activePlayers} dogs online
+          {stats.activePlayers} players online
         </p>
         <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tight leading-none mb-6 text-hero">
           ODOGGLE
@@ -31,7 +31,7 @@ export default async function HomePage() {
           <span className="h-px w-12 bg-gradient-to-r from-transparent via-accent/50 to-transparent" aria-hidden />
         </div>
         <p className="text-muted max-w-2xl mx-auto mb-10 text-base md:text-lg leading-relaxed">
-          Random 1v1 dog face battle arena. Verify your PDL rating, win the bark off, climb the global top dog ladder.
+          Random 1v1. Verify your PDL rating, win the match, climb the global ladder.
         </p>
         <div className="flex gap-4 justify-center flex-wrap">
           <Link href="/arena" className="btn-arena inline-block">
@@ -47,7 +47,7 @@ export default async function HomePage() {
       </section>
 
       <section className="flex flex-wrap justify-center gap-2 mb-16">
-        {["Enter Arena", "Bark Battle", "Climb ELO", "Pro: Lab PDL"].map((step, i) => (
+        {["Enter Arena", "Face-Off", "Climb ELO", "Pro: Lab PDL"].map((step, i) => (
           <span key={step} className="flex items-center gap-2">
             {i > 0 && <span className="text-white/20">→</span>}
             <span className="step-pill">{step}</span>
@@ -63,11 +63,11 @@ export default async function HomePage() {
       </section>
 
       <section className="mb-16">
-        <h2 className="section-title text-2xl mb-8 text-center text-gradient-accent">How the bark battle works</h2>
+        <h2 className="section-title text-2xl mb-8 text-center text-gradient-accent">Three steps. One ladder.</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {[
             { step: "01", title: "Enter Arena", desc: "Free for everyone. Camera check on join, then ranked 1v1 matchmaking.", href: "/arena", accent: "arena" },
-            { step: "02", title: "Bark Battle & Climb", desc: "15-second face-off. Higher PDL wins when the timer ends. ELO updates.", href: "/arena", accent: "accent" },
+            { step: "02", title: "Compete & Climb", desc: "15-second face-off. Higher PDL wins when the timer ends. ELO updates.", href: "/arena", accent: "accent" },
             { step: "03", title: "Pro: The Lab", desc: "Lifetime Pro unlocks on-device PDL scans — symmetry, harmony, muzzle, coat, eyes.", href: "/pricing", accent: "pro" },
           ].map((s) => (
             <div
@@ -90,10 +90,10 @@ export default async function HomePage() {
       <section className="glass-card p-8 mb-16">
         <h2 className="section-title text-xl mb-4">What is Odoggle?</h2>
         <p className="text-muted leading-relaxed">
-          Odoggle is a live 1v1 dog face-off arena. Two strangers go camera-on for fifteen seconds,
+          Odoggle is a live 1v1 face-off arena. Two strangers go camera-on for fifteen seconds,
           then the higher PDL rating wins and ELO is exchanged. Arena is free for everyone.
           Pro members unlock The Lab for on-device PDL scans — nothing uploaded. Win streaks climb the global ladder.
-          Top 100 unlocks the Top Dog tier.
+          Top 100 unlocks the Legend tier.
         </p>
       </section>
 

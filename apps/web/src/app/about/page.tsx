@@ -3,7 +3,7 @@ export default function AboutPage() {
     <article className="max-w-2xl mx-auto prose prose-invert">
       <h1>About Odoggle</h1>
       <p>
-        Odoggle is a privacy-first 1v1 dog video face-off arena. Two strangers go head-to-head on live
+        Odoggle is a privacy-first 1v1 video face-off arena. Two players go head-to-head on live
         webcam for 15 seconds, then the higher PDL rating wins and ELO decides who climbs the global leaderboard.
       </p>
       <p>

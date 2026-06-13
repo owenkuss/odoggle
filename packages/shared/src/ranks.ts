@@ -5,14 +5,14 @@ export interface RankTier {
   maxElo: number;
 }
 
-/** Dog-themed ELO tiers — mirrors getRankTitle breakpoints. */
+/** ELO tiers — mirrors getRankTitle breakpoints. */
 export const RANK_TIERS: RankTier[] = [
-  { title: "Top Dog", emoji: "👑", minElo: 2400, maxElo: 9999 },
-  { title: "Alpha", emoji: "⚡", minElo: 2000, maxElo: 2399 },
+  { title: "Legend", emoji: "👑", minElo: 2400, maxElo: 9999 },
+  { title: "Elite", emoji: "⚡", minElo: 2000, maxElo: 2399 },
   { title: "Champion", emoji: "🏆", minElo: 1600, maxElo: 1999 },
-  { title: "Good Boy", emoji: "⭐", minElo: 1200, maxElo: 1599 },
-  { title: "Pup", emoji: "🐾", minElo: 800, maxElo: 1199 },
-  { title: "Stray", emoji: "🥀", minElo: 0, maxElo: 799 },
+  { title: "Contender", emoji: "⭐", minElo: 1200, maxElo: 1599 },
+  { title: "Rookie", emoji: "◆", minElo: 800, maxElo: 1199 },
+  { title: "Unranked", emoji: "—", minElo: 0, maxElo: 799 },
 ];
 
 export function getRankTier(elo: number): RankTier {

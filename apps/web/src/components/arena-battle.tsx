@@ -347,7 +347,7 @@ export function ArenaBattle({ roomCode }: ArenaProps) {
           {phase === "battle" && (
             <div className="text-center mt-4">
               <div className="text-4xl font-bold text-amber-400 tabular-nums">{timer}s</div>
-              <div className="text-xs text-zinc-600 mt-1">Bark battle — winner decided by PDL when timer ends</div>
+              <div className="text-xs text-zinc-600 mt-1">Match live — higher PDL wins when the timer ends</div>
             </div>
           )}
           <div className="flex gap-3 mt-4 justify-center flex-wrap">

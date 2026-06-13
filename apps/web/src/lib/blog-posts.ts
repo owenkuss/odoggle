@@ -15,10 +15,10 @@ export const BLOG_POSTS: BlogPost[] = [
     date: "2026-06-01",
     excerpt: "Five on-device sub-scores combine into your 1–10 Perceived Dog Level.",
     body: [
-      "PDL (Perceived Dog Level) is Odoggle's dog-themed answer to facial rating — but built for snouts, not humans.",
+      "PDL (Perceived Dog Level) is Odoggle's on-device facial rating system — the same competitive loop as PSL, adapted for DogFLW landmarks.",
       "When you scan in The Lab, your browser runs two ONNX models trained on DogFLW: a face localizer crops your dog, then a 46-point landmark regressor maps symmetry, harmony, muzzle shape, coat texture, and eye alertness.",
       "Each sub-score is normalized 0–100, weighted (harmony and symmetry matter most), then mapped to a 1–10 band with clustering in the middle — so a 5.5 and a 6.2 feel meaningfully different.",
-      "Nothing leaves your device. PDL is scored on-device — the higher rating wins the bark battle.",
+      "Nothing leaves your device. PDL is scored locally — the higher rating wins the match.",
     ],
   },
   {
@@ -29,19 +29,19 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt: "Canthal tilt for dogs — why bright eyes score higher in The Lab.",
     body: [
       "Eye alertness measures the angle between inner and outer eye corners — the same canthal tilt idea used in human PSL, adapted for DogFLW landmarks.",
-      "Dogs with level, engaged eyes tend to score higher than droopy or asymmetric corners. Breed matters: some breeds naturally have different baseline tilts, so treat sub-scores as fun calibration, not judgment.",
+      "Dogs with level, engaged eyes tend to score higher than droopy or asymmetric corners. Breed matters: some breeds naturally have different baseline tilts, so treat sub-scores as calibration, not judgment.",
       "Good lighting helps the landmark model. Arena runs a camera check when you queue if your score looks off.",
     ],
   },
   {
     slug: "win-first-battle",
-    title: "5 tips to win your first bark battle",
+    title: "5 tips to win your first match",
     tag: "STRATEGY",
     date: "2026-06-03",
-    excerpt: "Framing, energy, and queue etiquette for your first match.",
+    excerpt: "Framing, energy, and queue etiquette for your first arena round.",
     body: [
       "1. Frame the face — fill 40–70% of the frame. Arena checks this before matchmaking.",
-      "2. Light the snout — backlight kills landmark confidence and makes you look sleepy on cam.",
+      "2. Front-light the face — backlight kills landmark confidence and reads flat on cam.",
       "3. Energy in the 15 seconds — motion and alert eyes read better on camera.",
       "4. Queue during peak hours — faster matchmaking and more opponents in your ELO band.",
       "5. Skip toxic matches — report bad actors. ELO is server-authoritative.",

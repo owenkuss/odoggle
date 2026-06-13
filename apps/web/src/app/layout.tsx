@@ -14,15 +14,15 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Odoggle — 1v1 Dog Battle Game · Live PDL Rating",
   description:
-    "Random 1v1 dog face battle arena. Scan your dog's PDL, win the bark off, climb the global top dog ladder.",
+    "Random 1v1 arena. Scan your PDL, win ranked matches, climb the global ladder.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000"),
   openGraph: {
     title: "Odoggle — The 1v1 Dog Battle Game",
-    description: "On-device PDL rating. Live bark battles. Climb the Top Dog ladder.",
+    description: "On-device PDL rating. Live ranked matches. Climb the global ladder.",
     siteName: "Odoggle",
     type: "website",
   },
-  twitter: { card: "summary_large_image", title: "Odoggle", description: "1v1 dog battle arena" },
+  twitter: { card: "summary_large_image", title: "Odoggle", description: "1v1 face-off arena · Live PDL rating" },
   icons: { icon: "/favicon.svg" },
 };
 
