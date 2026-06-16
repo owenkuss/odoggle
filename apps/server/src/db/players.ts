@@ -16,13 +16,13 @@ function rowToProfile(row: Record<string, unknown>): PlayerProfile {
   };
 }
 
-export async function dbUpsertPlayer(profile: PlayerProfile): Promise<void> {
+export async function dbUpsertPlayer(profile: PlayerProfile, googleId?: string): Promise<void> {
   const pool = getPool();
   if (!pool) return;
 
   await pool.query(
-    `INSERT INTO players (id, display_name, elo, peak_elo, wins, losses, is_pro, is_guest, last_pdl, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+    `INSERT INTO players (id, display_name, elo, peak_elo, wins, losses, is_pro, is_guest, google_id, last_pdl, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
      ON CONFLICT (id) DO UPDATE SET
        display_name = EXCLUDED.display_name,
        elo = EXCLUDED.elo,
@@ -31,6 +31,7 @@ export async function dbUpsertPlayer(profile: PlayerProfile): Promise<void> {
        losses = EXCLUDED.losses,
        is_pro = EXCLUDED.is_pro,
        is_guest = EXCLUDED.is_guest,
+       google_id = COALESCE(EXCLUDED.google_id, players.google_id),
        last_pdl = COALESCE(EXCLUDED.last_pdl, players.last_pdl),
        updated_at = NOW()`,
     [
@@ -42,6 +43,7 @@ export async function dbUpsertPlayer(profile: PlayerProfile): Promise<void> {
       profile.losses,
       profile.isPro,
       profile.isGuest,
+      googleId ?? (!profile.isGuest ? profile.id : null),
       profile.lastPdl ? JSON.stringify(profile.lastPdl) : null,
     ]
   );
@@ -78,7 +80,8 @@ export async function dbGetLeaderboard(limit: number) {
 export async function dbMergePlayers(
   guestId: string,
   targetId: string,
-  displayName: string
+  displayName: string,
+  googleId?: string
 ): Promise<PlayerProfile | null> {
   const pool = getPool();
   if (!pool) return null;
@@ -105,7 +108,7 @@ export async function dbMergePlayers(
       isGuest: false,
       lastPdl: guestPdl ?? target.lastPdl,
     };
-    await dbUpsertPlayer(merged);
+    await dbUpsertPlayer(merged, googleId ?? targetId);
     return merged;
   }
 
@@ -120,7 +123,7 @@ export async function dbMergePlayers(
     isGuest: false,
     lastPdl: guestPdl,
   };
-  await dbUpsertPlayer(merged);
+  await dbUpsertPlayer(merged, googleId ?? targetId);
   return merged;
 }
 

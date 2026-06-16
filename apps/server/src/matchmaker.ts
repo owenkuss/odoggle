@@ -76,6 +76,7 @@ export class Matchmaker {
 
   mergeProfiles(guestId: string, accountId: string, displayName: string): PlayerProfile {
     const merged = memoryMergePlayers(this.players, guestId, accountId, displayName);
+    this.players.delete(guestId);
     cachePlayer(merged);
     return merged;
   }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PDL_SCAN_TTL_MS, getRankTier, type PdlResult } from "@odoggle/shared";
 import { PdlBar } from "@/components/ui";
+import { GoogleAccountCard } from "@/components/google-account-card";
 import { loadPdlHistory } from "@/lib/pdl-history";
 import { usePlayer } from "@/lib/player-context";
 
@@ -31,6 +32,8 @@ export default function ProfilePage() {
     <div className="max-w-lg mx-auto">
       <h1 className="text-3xl font-bold mb-2 text-center text-hero">Your Profile</h1>
       <p className="text-muted text-center mb-8">Stats, PDL history, and ladder tier</p>
+
+      <GoogleAccountCard />
 
       <div className="glass-card p-6 mb-6">
         <div className="flex items-start justify-between mb-6">
@@ -70,12 +73,6 @@ export default function ProfilePage() {
         <Link href="/leaderboard" className="block text-center text-sm text-accent-bright hover:underline">
           View global rank →
         </Link>
-
-        {player.isGuest && (
-          <p className="text-xs text-muted text-center mt-4">
-            Link Google (top-right) to save rank across devices.
-          </p>
-        )}
       </div>
 
       <div className="glass-card p-6 mb-6">

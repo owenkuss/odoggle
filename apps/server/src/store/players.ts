@@ -38,15 +38,16 @@ export async function mergeGuestIntoAccount(
   guestId: string,
   accountId: string,
   displayName: string,
-  memoryMerge: (guestId: string, accountId: string, displayName: string) => PlayerProfile
+  memoryMerge: (guestId: string, accountId: string, displayName: string) => PlayerProfile,
+  googleId?: string
 ): Promise<PlayerProfile> {
-  const fromDb = await dbMergePlayers(guestId, accountId, displayName);
+  const fromDb = await dbMergePlayers(guestId, accountId, displayName, googleId);
   const merged = fromDb ?? memoryMerge(guestId, accountId, displayName);
   merged.id = accountId;
   merged.isGuest = false;
   cache.set(accountId, merged);
   cache.delete(guestId);
-  void dbUpsertPlayer(merged);
+  void dbUpsertPlayer(merged, googleId);
   return merged;
 }
 
@@ -82,6 +83,7 @@ export function memoryMergePlayers(
       lastPdl: guest?.lastPdl ?? existing.lastPdl,
     };
     players.set(accountId, merged);
+    players.delete(guestId);
     return merged;
   }
 
@@ -97,5 +99,6 @@ export function memoryMergePlayers(
     lastPdl: guest?.lastPdl,
   };
   players.set(accountId, merged);
+  players.delete(guestId);
   return merged;
 }

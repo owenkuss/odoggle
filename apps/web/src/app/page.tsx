@@ -102,7 +102,7 @@ export default async function HomePage() {
         <div className="space-y-4 text-sm">
           {[
             { q: "How is PDL calculated?", a: "Dog facial keypoint analysis runs entirely in your browser. Five sub-scores combine into a 1–10 PDL. No frames are uploaded." },
-            { q: "Do I need an account?", a: "No. ELO and PDL are saved locally by default. Link Google for a portable rank." },
+            { q: "Do I need an account?", a: "No. ELO and PDL are saved locally by default. Connect Google on your profile to sync rank across devices." },
             { q: "Is it safe?", a: "Pet-owner gate, instant skip, mute and report. No raw video is logged — only match metadata for ELO." },
           ].map((f) => (
             <div key={f.q} className="glass-card p-5 border-white/5">

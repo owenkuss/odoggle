@@ -160,7 +160,7 @@ app.post("/api/player/pdl", async (req, res) => {
 });
 
 app.post("/api/player/merge", async (req, res) => {
-  const { guestId, accountId, displayName } = req.body;
+  const { guestId, accountId, displayName, googleId } = req.body;
   if (!guestId || !accountId || !displayName) {
     return res.status(400).json({ error: "guestId, accountId, displayName required" });
   }
@@ -168,7 +168,8 @@ app.post("/api/player/merge", async (req, res) => {
     String(guestId),
     String(accountId),
     String(displayName),
-    (g, a, d) => matchmaker.mergeProfiles(g, a, d)
+    (g, a, d) => matchmaker.mergeProfiles(g, a, d),
+    googleId ? String(googleId) : undefined
   );
   res.json(merged);
 });
