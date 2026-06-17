@@ -10,6 +10,7 @@ import {
   validateCameraFrame,
 } from "@/lib/pdl";
 import { smoothPdlResult } from "@/lib/pdl/smooth";
+import { resetDetectionSmoothing, smoothDetection } from "@/lib/pdl/smooth-detection";
 
 const SCAN_INTERVAL_MS = 280;
 
@@ -34,8 +35,10 @@ export function useLivePdlScan(
   useEffect(() => {
     if (!enabled) {
       smoothedRef.current = null;
+      resetDetectionSmoothing();
       setLivePdl(null);
       setFramingOk(false);
+      setDetection(null);
       return;
     }
 
@@ -50,9 +53,10 @@ export function useLivePdlScan(
       }
 
       const brightness = getFrameBrightness(video);
-      const det = await detectDogFace(video);
+      const rawDet = await detectDogFace(video);
       if (!active) return;
 
+      const det = rawDet ? smoothDetection(rawDet) : null;
       setDetection(det);
       if (overlayRef.current) {
         drawDetectionOverlay(overlayRef.current, video, det);

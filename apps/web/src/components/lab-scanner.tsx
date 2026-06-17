@@ -10,10 +10,11 @@ import {
   getFrameBrightness,
   loadModels,
   isHeuristicMode,
-  smoothPdlResult,
   validateCameraFrame,
 } from "@/lib/pdl";
+import { resetDetectionSmoothing, smoothDetection } from "@/lib/pdl/smooth-detection";
 import { syncPdlToServer } from "@/lib/pdl-sync";
+import { smoothPdlResult } from "@/lib/pdl/smooth";
 import { appendPdlHistory } from "@/lib/pdl-history";
 import { usePlayer } from "@/lib/player-context";
 import type { PdlResult } from "@odoggle/shared";
@@ -70,7 +71,8 @@ export function LabScanner() {
       }
 
       const brightness = getFrameBrightness(video);
-      const detection = await detectDogFace(video);
+      const rawDet = await detectDogFace(video);
+      const detection = rawDet ? smoothDetection(rawDet) : null;
 
       if (overlayRef.current) {
         drawDetectionOverlay(overlayRef.current, video, detection);
@@ -122,6 +124,7 @@ export function LabScanner() {
   const rescan = useCallback(() => {
     smoothedRef.current = null;
     bestRef.current = null;
+    resetDetectionSmoothing();
     setLocked(null);
     setLivePdl(null);
     setScanning(true);

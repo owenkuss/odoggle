@@ -1,5 +1,6 @@
-export { computePdl, LANDMARK_COUNT, LANDMARK_GROUPS } from "./scorer";
+export { computePdl, FACE_OUTLINE_INDICES, LANDMARK_COUNT, LANDMARK_GROUPS } from "./scorer";
 export { smoothPdlResult } from "./smooth";
+export { resetDetectionSmoothing, smoothDetection } from "./smooth-detection";
 export { drawDetectionOverlay } from "./overlay";
 export type { DogFaceDetection, DogLandmark, PdlResult, PdlSubScores } from "./types";
 export {

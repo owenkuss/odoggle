@@ -15,6 +15,13 @@ export const LANDMARK_GROUPS = {
   mouthChin: [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
 } as const;
 
+/** Closed perimeter order for the live face outline overlay. */
+export const FACE_OUTLINE_INDICES: readonly number[] = [
+  ...LANDMARK_GROUPS.leftEar,
+  ...LANDMARK_GROUPS.mouthChin,
+  ...[...LANDMARK_GROUPS.rightEar].reverse(),
+];
+
 export function dist(a: DogLandmark, b: DogLandmark): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
