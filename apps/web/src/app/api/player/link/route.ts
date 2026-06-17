@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
-import { getApiBase } from "@/lib/api";
+import { getApiBase, wakeServer } from "@/lib/api";
 import { getAccountId } from "@/lib/google-account";
 
 export async function POST(req: Request) {
@@ -22,27 +22,44 @@ export async function POST(req: Request) {
   }
 
   const displayName = session.user.name ?? session.user.email ?? "Player";
-  const base = getApiBase();
-  const mergeUrl = base.startsWith("http")
-    ? `${base}/api/player/merge`
-    : `${base}/player/merge`;
 
-  const res = await fetch(mergeUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      guestId,
-      accountId,
-      displayName,
-      googleId: accountId,
-    }),
-  });
+  try {
+    await wakeServer();
+    const base = getApiBase();
+    const mergeUrl = base.startsWith("http")
+      ? `${base}/api/player/merge`
+      : `${base}/player/merge`;
 
-  if (!res.ok) {
-    const err = await res.text();
-    return NextResponse.json({ error: err || "Merge failed" }, { status: res.status });
+    const res = await fetch(mergeUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        guestId,
+        accountId,
+        displayName,
+        googleId: accountId,
+      }),
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const raw = await res.text();
+      let message = "Merge failed";
+      try {
+        const err = JSON.parse(raw) as { error?: string };
+        message = err.error ?? message;
+      } catch {
+        if (raw) message = raw;
+      }
+      return NextResponse.json({ error: message }, { status: res.status });
+    }
+
+    const merged = await res.json();
+    return NextResponse.json({ ...merged, isGuest: false });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Could not reach game server" },
+      { status: 502 }
+    );
   }
-
-  const merged = await res.json();
-  return NextResponse.json({ ...merged, isGuest: false });
 }

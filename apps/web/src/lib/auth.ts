@@ -1,5 +1,18 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { getAuthCookieDomain, isGoogleAuthConfigured } from "./auth-config";
+
+function sessionCookieOptions() {
+  const domain = getAuthCookieDomain();
+  const secure = process.env.NODE_ENV === "production";
+  return {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    secure,
+    ...(domain ? { domain } : {}),
+  };
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -8,10 +21,30 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
     }),
   ],
-  pages: {
-    signIn: "/profile",
+  session: { strategy: "jwt" },
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}next-auth.session-token`,
+      options: sessionCookieOptions(),
+    },
+    callbackUrl: {
+      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}next-auth.callback-url`,
+      options: sessionCookieOptions(),
+    },
+    csrfToken: {
+      name: `${process.env.NODE_ENV === "production" ? "__Host-" : ""}next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
   },
   callbacks: {
+    async signIn() {
+      return isGoogleAuthConfigured();
+    },
     async jwt({ token, account }) {
       if (account?.provider === "google" && account.providerAccountId) {
         token.sub = account.providerAccountId;
@@ -25,5 +58,10 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+  pages: {
+    signIn: "/profile",
+    error: "/profile",
+  },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 };

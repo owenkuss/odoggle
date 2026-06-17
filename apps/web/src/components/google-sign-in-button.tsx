@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 
 type Props = {
@@ -13,14 +14,20 @@ export function GoogleSignInButton({
   callbackUrl = "/profile",
   label = "Connect Google",
 }: Props) {
+  const [loading, setLoading] = useState(false);
+
   return (
     <button
       type="button"
-      onClick={() => signIn("google", { callbackUrl })}
-      className={`inline-flex items-center justify-center gap-2 ${className}`}
+      disabled={loading}
+      onClick={() => {
+        setLoading(true);
+        void signIn("google", { callbackUrl });
+      }}
+      className={`inline-flex items-center justify-center gap-2 disabled:opacity-60 ${className}`}
     >
       <GoogleMark />
-      {label}
+      {loading ? "Redirecting…" : label}
     </button>
   );
 }
